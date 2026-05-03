@@ -22,6 +22,7 @@ import ApplicantsPage from "@/pages/recruiter/ApplicantsPage";
 import AnalyticsPage from "@/pages/recruiter/AnalyticsPage";
 import CompanyPage from "@/pages/recruiter/CompanyPage";
 import InterviewCalendarPage from "@/pages/recruiter/InterviewCalendarPage";
+import EmbedPage from "@/pages/recruiter/EmbedPage";
 import ResumePage from "@/pages/candidate/ResumePage";
 import SavedJobsPage from "@/pages/candidate/SavedJobsPage";
 import AlertsPage from "@/pages/candidate/AlertsPage";
@@ -145,6 +146,11 @@ function Router() {
             <Route path="/recruiter/interviews">
               <ProtectedRoute allowedRoles={["recruiter"]}>
                 <InterviewCalendarPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/recruiter/embed">
+              <ProtectedRoute allowedRoles={["recruiter"]}>
+                <EmbedPage />
               </ProtectedRoute>
             </Route>
 

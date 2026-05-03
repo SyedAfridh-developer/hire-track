@@ -12,6 +12,7 @@ import alertsRouter from "./alerts";
 import analyticsRouter from "./analytics";
 import interviewsRouter from "./interviews";
 import digestRouter from "./digest";
+import embedRouter from "./embed";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use("/alerts", alertsRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/recruiter", interviewsRouter);
 router.use("/recruiter", digestRouter);
+router.use("/embed", embedRouter);
 
 export default router;
