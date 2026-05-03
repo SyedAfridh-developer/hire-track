@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings } from "lucide-react";
 import { NotificationsDropdown } from "./NotificationsDropdown";
+import { MessagesNavBadge } from "./MessagesNavBadge";
 
 export function Navbar() {
   const { isAuthenticated, role, logout, user } = useAuth();
@@ -20,28 +21,28 @@ export function Navbar() {
               <BriefcaseBusiness className="h-6 w-6" />
               <span className="font-bold text-xl tracking-tight">HireTrack</span>
             </Link>
-            
+
             {isAuthenticated && (
               <div className="hidden md:flex ml-10 space-x-8">
-                <Link 
-                  href="/dashboard" 
+                <Link
+                  href="/dashboard"
                   className={`flex items-center gap-2 text-sm font-medium ${location === "/dashboard" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   Dashboard
                 </Link>
-                
+
                 {isCandidate && (
                   <>
-                    <Link 
-                      href="/jobs" 
+                    <Link
+                      href="/jobs"
                       className={`flex items-center gap-2 text-sm font-medium ${location.startsWith("/jobs") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                     >
                       <BriefcaseBusiness className="h-4 w-4" />
                       Browse Jobs
                     </Link>
-                    <Link 
-                      href="/applications" 
+                    <Link
+                      href="/applications"
                       className={`flex items-center gap-2 text-sm font-medium ${location === "/applications" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                     >
                       <User className="h-4 w-4" />
@@ -51,15 +52,13 @@ export function Navbar() {
                 )}
 
                 {isRecruiter && (
-                  <>
-                    <Link 
-                      href="/recruiter/jobs" 
-                      className={`flex items-center gap-2 text-sm font-medium ${location.startsWith("/recruiter/jobs") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      <BriefcaseBusiness className="h-4 w-4" />
-                      My Jobs
-                    </Link>
-                  </>
+                  <Link
+                    href="/recruiter/jobs"
+                    className={`flex items-center gap-2 text-sm font-medium ${location.startsWith("/recruiter/jobs") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <BriefcaseBusiness className="h-4 w-4" />
+                    My Jobs
+                  </Link>
                 )}
               </div>
             )}
@@ -76,11 +75,14 @@ export function Navbar() {
                 </Button>
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <div className="text-sm font-medium hidden sm:block mr-2">
                   {user?.name}
                 </div>
+
                 {isCandidate && <NotificationsDropdown />}
+                <MessagesNavBadge />
+
                 {isCandidate && (
                   <Button variant="ghost" size="icon" asChild>
                     <Link href="/profile" title="Profile">
