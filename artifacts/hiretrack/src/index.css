@@ -212,3 +212,38 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* ── Resume print styles ─────────────────────────────────── */
+@media print {
+  /* Hide everything except the resume document */
+  body > * { display: none !important; }
+  #root > * { display: none !important; }
+
+  /* Show the resume paper */
+  .resume-paper {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Make sure the resume paper is visible */
+  .resume-paper * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+}

@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Loader2, Upload, FileText, User, Briefcase, GraduationCap, Tag } from "lucide-react";
+import { Plus, Trash2, Loader2, Upload, FileText, User, Briefcase, GraduationCap, Tag, FileDown } from "lucide-react";
+import { Link } from "wouter";
 
 const schema = z.object({
   headline: z.string().optional(),
@@ -136,6 +137,12 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
           <p className="text-muted-foreground mt-0.5">Keep your profile up to date to attract recruiters</p>
         </div>
+        <Button variant="outline" asChild className="gap-2">
+          <Link href="/resume">
+            <FileDown className="h-4 w-4" />
+            Generate Resume
+          </Link>
+        </Button>
       </div>
 
       <Form {...form}>
