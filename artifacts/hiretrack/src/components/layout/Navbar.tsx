@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings, Bookmark, Bell, BarChart2, CalendarDays, Code2 } from "lucide-react";
+import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings, Bookmark, Bell, BarChart2, CalendarDays, Code2, LayoutGrid } from "lucide-react";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { MessagesNavBadge } from "./MessagesNavBadge";
 
@@ -87,6 +87,13 @@ export function Navbar() {
                     >
                       <CalendarDays className="h-4 w-4" />
                       Calendar
+                    </Link>
+                    <Link
+                      href="/recruiter/kanban"
+                      className={`flex items-center gap-2 text-sm font-medium ${location === "/recruiter/kanban" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                      Pipeline
                     </Link>
                     <Link
                       href="/recruiter/embed"

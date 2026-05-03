@@ -67,6 +67,33 @@ async function createStatusNotification(candidateId: number, jobTitle: string, n
   });
 }
 
+// GET /api/recruiter/pipeline — all applications across all recruiter's jobs
+router.get("/recruiter/pipeline", authenticate, requireRole("recruiter"), async (req: AuthRequest, res) => {
+  const jobIdFilter = req.query["jobId"] ? parseInt(req.query["jobId"] as string) : null;
+
+  const recruiterJobs = await db
+    .select({ id: jobsTable.id })
+    .from(jobsTable)
+    .where(eq(jobsTable.recruiterId, req.user!.id));
+
+  const jobIds = recruiterJobs.map((j) => j.id);
+  if (!jobIds.length) { res.json([]); return; }
+
+  const { inArray } = await import("drizzle-orm");
+  const whereClause = jobIdFilter
+    ? and(inArray(applicationsTable.jobId, jobIds), eq(applicationsTable.jobId, jobIdFilter))
+    : inArray(applicationsTable.jobId, jobIds);
+
+  const apps = await db
+    .select()
+    .from(applicationsTable)
+    .where(whereClause)
+    .orderBy(sql`${applicationsTable.createdAt} DESC`);
+
+  const result = await Promise.all(apps.map(buildApplicationResponse));
+  res.json(result);
+});
+
 // GET /api/jobs/:jobId/applications — recruiter views applicants
 router.get("/jobs/:jobId/applications", authenticate, requireRole("recruiter"), async (req: AuthRequest, res) => {
   const jobId = parseInt(req.params.jobId);
