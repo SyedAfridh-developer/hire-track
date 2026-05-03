@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { useGetMyApplications, getGetMyApplicationsQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, MapPin, Clock, FileText, ExternalLink, CheckCircle, XCircle, Star, Briefcase } from "lucide-react";
+import { Building2, MapPin, Clock, FileText, ExternalLink, CheckCircle, XCircle, Star, Briefcase, MessageCircle } from "lucide-react";
+import { MessageThread } from "@/components/messages/MessageThread";
 
 const STATUS_CONFIG = {
   applied: { label: "Applied", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300", Icon: FileText },
@@ -13,6 +15,8 @@ const STATUS_CONFIG = {
 };
 
 export default function ApplicationsPage() {
+  const [messagingAppId, setMessagingAppId] = useState<number | null>(null);
+
   const { data: applications, isLoading } = useGetMyApplications({
     query: { queryKey: getGetMyApplicationsQueryKey() },
   });
@@ -75,12 +79,23 @@ export default function ApplicationsPage() {
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${cfg?.color}`} data-testid={`status-${app.id}`}>
                         {cfg?.label}
                       </span>
-                      <Button variant="ghost" size="sm" asChild className="text-xs h-7">
-                        <Link href={`/jobs/${app.jobId}`}>
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          View job
-                        </Link>
-                      </Button>
+                      <div className="flex gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 gap-1"
+                          onClick={() => setMessagingAppId(app.id)}
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                          Message
+                        </Button>
+                        <Button variant="ghost" size="sm" asChild className="text-xs h-7">
+                          <Link href={`/jobs/${app.jobId}`}>
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            View job
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -88,6 +103,14 @@ export default function ApplicationsPage() {
             );
           })}
         </div>
+      )}
+
+      {messagingAppId !== null && (
+        <MessageThread
+          applicationId={messagingAppId}
+          open={messagingAppId !== null}
+          onClose={() => setMessagingAppId(null)}
+        />
       )}
     </div>
   );

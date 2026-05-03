@@ -21,16 +21,20 @@ import type {
   ApplyBody,
   AuthResponse,
   CandidateDashboard,
+  ChatMessage,
   Company,
   CreateJobBody,
   ErrorResponse,
+  GetUnreadMessageCount200,
   HealthStatus,
   Job,
   JobsListResponse,
   ListJobsParams,
   LoginBody,
   MarkAllNotificationsRead200,
+  MarkThreadRead200,
   MessageResponse,
+  MessageThreadResponse,
   Notification,
   NotificationsResponse,
   Profile,
@@ -38,6 +42,7 @@ import type {
   RefreshBody,
   RegisterBody,
   ResumeUploadResponse,
+  SendMessageBody,
   TokenResponse,
   UpdateCompanyBody,
   UpdateProfileBody,
@@ -2255,3 +2260,341 @@ export const useMarkNotificationRead = <
 > => {
   return useMutation(getMarkNotificationReadMutationOptions(options));
 };
+
+/**
+ * @summary Get message thread for an application
+ */
+export const getGetMessageThreadUrl = (applicationId: number) => {
+  return `/api/messages/${applicationId}`;
+};
+
+export const getMessageThread = async (
+  applicationId: number,
+  options?: RequestInit,
+): Promise<MessageThreadResponse> => {
+  return customFetch<MessageThreadResponse>(
+    getGetMessageThreadUrl(applicationId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetMessageThreadQueryKey = (applicationId: number) => {
+  return [`/api/messages/${applicationId}`] as const;
+};
+
+export const getGetMessageThreadQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMessageThread>>,
+  TError = ErrorType<unknown>,
+>(
+  applicationId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMessageThread>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMessageThreadQueryKey(applicationId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMessageThread>>
+  > = ({ signal }) =>
+    getMessageThread(applicationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!applicationId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMessageThread>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMessageThreadQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMessageThread>>
+>;
+export type GetMessageThreadQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get message thread for an application
+ */
+
+export function useGetMessageThread<
+  TData = Awaited<ReturnType<typeof getMessageThread>>,
+  TError = ErrorType<unknown>,
+>(
+  applicationId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMessageThread>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMessageThreadQueryOptions(applicationId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Send a message in an application thread
+ */
+export const getSendMessageUrl = (applicationId: number) => {
+  return `/api/messages/${applicationId}`;
+};
+
+export const sendMessage = async (
+  applicationId: number,
+  sendMessageBody: SendMessageBody,
+  options?: RequestInit,
+): Promise<ChatMessage> => {
+  return customFetch<ChatMessage>(getSendMessageUrl(applicationId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(sendMessageBody),
+  });
+};
+
+export const getSendMessageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMessage>>,
+    TError,
+    { applicationId: number; data: BodyType<SendMessageBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendMessage>>,
+  TError,
+  { applicationId: number; data: BodyType<SendMessageBody> },
+  TContext
+> => {
+  const mutationKey = ["sendMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendMessage>>,
+    { applicationId: number; data: BodyType<SendMessageBody> }
+  > = (props) => {
+    const { applicationId, data } = props ?? {};
+
+    return sendMessage(applicationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendMessage>>
+>;
+export type SendMessageMutationBody = BodyType<SendMessageBody>;
+export type SendMessageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send a message in an application thread
+ */
+export const useSendMessage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMessage>>,
+    TError,
+    { applicationId: number; data: BodyType<SendMessageBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendMessage>>,
+  TError,
+  { applicationId: number; data: BodyType<SendMessageBody> },
+  TContext
+> => {
+  return useMutation(getSendMessageMutationOptions(options));
+};
+
+/**
+ * @summary Mark all messages in a thread as read
+ */
+export const getMarkThreadReadUrl = (applicationId: number) => {
+  return `/api/messages/${applicationId}/read`;
+};
+
+export const markThreadRead = async (
+  applicationId: number,
+  options?: RequestInit,
+): Promise<MarkThreadRead200> => {
+  return customFetch<MarkThreadRead200>(getMarkThreadReadUrl(applicationId), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getMarkThreadReadMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markThreadRead>>,
+    TError,
+    { applicationId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markThreadRead>>,
+  TError,
+  { applicationId: number },
+  TContext
+> => {
+  const mutationKey = ["markThreadRead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markThreadRead>>,
+    { applicationId: number }
+  > = (props) => {
+    const { applicationId } = props ?? {};
+
+    return markThreadRead(applicationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkThreadReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markThreadRead>>
+>;
+
+export type MarkThreadReadMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark all messages in a thread as read
+ */
+export const useMarkThreadRead = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markThreadRead>>,
+    TError,
+    { applicationId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markThreadRead>>,
+  TError,
+  { applicationId: number },
+  TContext
+> => {
+  return useMutation(getMarkThreadReadMutationOptions(options));
+};
+
+/**
+ * @summary Get total unread message count for the current user
+ */
+export const getGetUnreadMessageCountUrl = () => {
+  return `/api/messages/unread-count`;
+};
+
+export const getUnreadMessageCount = async (
+  options?: RequestInit,
+): Promise<GetUnreadMessageCount200> => {
+  return customFetch<GetUnreadMessageCount200>(getGetUnreadMessageCountUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUnreadMessageCountQueryKey = () => {
+  return [`/api/messages/unread-count`] as const;
+};
+
+export const getGetUnreadMessageCountQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUnreadMessageCount>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadMessageCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetUnreadMessageCountQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getUnreadMessageCount>>
+  > = ({ signal }) => getUnreadMessageCount({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadMessageCount>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetUnreadMessageCountQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUnreadMessageCount>>
+>;
+export type GetUnreadMessageCountQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get total unread message count for the current user
+ */
+
+export function useGetUnreadMessageCount<
+  TData = Awaited<ReturnType<typeof getUnreadMessageCount>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadMessageCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetUnreadMessageCountQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

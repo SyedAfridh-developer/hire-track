@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useGetJobApplications, getGetJobApplicationsQueryKey, useGetJob, getGetJobQueryKey, useUpdateApplicationStatus } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Users, FileText, Mail, MapPin, Tag } from "lucide-react";
+import { ChevronLeft, Users, FileText, Mail, MapPin, MessageCircle } from "lucide-react";
+import { MessageThread } from "@/components/messages/MessageThread";
 
 const STATUS_OPTIONS = [
   { value: "applied", label: "Applied", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
@@ -20,6 +22,7 @@ export default function ApplicantsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateStatus = useUpdateApplicationStatus();
+  const [messagingAppId, setMessagingAppId] = useState<number | null>(null);
 
   const { data: job } = useGetJob(Number(jobId), {
     query: { queryKey: getGetJobQueryKey(Number(jobId)), enabled: !!jobId },
@@ -87,19 +90,30 @@ export default function ApplicantsPage() {
                             {profile?.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{profile.location}</span>}
                           </div>
                         </div>
-                        <Select
-                          value={app.status}
-                          onValueChange={(val) => handleStatusChange(app.id, val)}
-                        >
-                          <SelectTrigger className="w-36 h-8 text-xs" data-testid={`status-select-${app.id}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Select
+                            value={app.status}
+                            onValueChange={(val) => handleStatusChange(app.id, val)}
+                          >
+                            <SelectTrigger className="w-36 h-8 text-xs" data-testid={`status-select-${app.id}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5"
+                            onClick={() => setMessagingAppId(app.id)}
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            Message
+                          </Button>
+                        </div>
                       </div>
 
                       {profile?.headline && (
@@ -142,6 +156,14 @@ export default function ApplicantsPage() {
             );
           })}
         </div>
+      )}
+
+      {messagingAppId !== null && (
+        <MessageThread
+          applicationId={messagingAppId}
+          open={messagingAppId !== null}
+          onClose={() => setMessagingAppId(null)}
+        />
       )}
     </div>
   );

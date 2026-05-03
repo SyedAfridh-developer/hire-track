@@ -290,6 +290,31 @@ export interface NotificationsResponse {
   unreadCount: number;
 }
 
+export interface ChatMessage {
+  id: number;
+  applicationId: number;
+  senderId: number;
+  recipientId: number;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
+  senderName: string;
+  senderRole: string;
+}
+
+export interface MessageThreadResponse {
+  messages: ChatMessage[];
+  unreadCount: number;
+  otherPartyName: string;
+  otherPartyRole: string;
+  jobTitle: string;
+}
+
+export interface SendMessageBody {
+  /** @minLength 1 */
+  body: string;
+}
+
 export type ListJobsParams = {
   page?: number;
   limit?: number;
@@ -312,4 +337,12 @@ export const ListJobsJobType = {
 
 export type MarkAllNotificationsRead200 = {
   message: string;
+};
+
+export type MarkThreadRead200 = {
+  message: string;
+};
+
+export type GetUnreadMessageCount200 = {
+  unreadCount: number;
 };

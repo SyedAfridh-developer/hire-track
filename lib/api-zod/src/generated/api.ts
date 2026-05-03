@@ -1013,3 +1013,59 @@ export const MarkNotificationReadResponse = zod.object({
   relatedJobId: zod.number().nullish(),
   createdAt: zod.coerce.date(),
 });
+
+/**
+ * @summary Get message thread for an application
+ */
+export const GetMessageThreadParams = zod.object({
+  applicationId: zod.coerce.number(),
+});
+
+export const GetMessageThreadResponse = zod.object({
+  messages: zod.array(
+    zod.object({
+      id: zod.number(),
+      applicationId: zod.number(),
+      senderId: zod.number(),
+      recipientId: zod.number(),
+      body: zod.string(),
+      isRead: zod.boolean(),
+      createdAt: zod.coerce.date(),
+      senderName: zod.string(),
+      senderRole: zod.string(),
+    }),
+  ),
+  unreadCount: zod.number(),
+  otherPartyName: zod.string(),
+  otherPartyRole: zod.string(),
+  jobTitle: zod.string(),
+});
+
+/**
+ * @summary Send a message in an application thread
+ */
+export const SendMessageParams = zod.object({
+  applicationId: zod.coerce.number(),
+});
+
+export const SendMessageBody = zod.object({
+  body: zod.string().min(1),
+});
+
+/**
+ * @summary Mark all messages in a thread as read
+ */
+export const MarkThreadReadParams = zod.object({
+  applicationId: zod.coerce.number(),
+});
+
+export const MarkThreadReadResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Get total unread message count for the current user
+ */
+export const GetUnreadMessageCountResponse = zod.object({
+  unreadCount: zod.number(),
+});
