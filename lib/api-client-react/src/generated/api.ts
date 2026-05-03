@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  ApplicantNote,
   Application,
   ApplyBody,
   AuthResponse,
@@ -25,6 +26,7 @@ import type {
   Company,
   CreateAlertBody,
   CreateJobBody,
+  CreateNoteBody,
   ErrorResponse,
   GetUnreadMessageCount200,
   HealthStatus,
@@ -3087,6 +3089,282 @@ export function useGetUnreadMessageCount<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get recruiter notes for an application
+ */
+export const getGetApplicationNotesUrl = (applicationId: number) => {
+  return `/api/applications/${applicationId}/notes`;
+};
+
+export const getApplicationNotes = async (
+  applicationId: number,
+  options?: RequestInit,
+): Promise<ApplicantNote[]> => {
+  return customFetch<ApplicantNote[]>(
+    getGetApplicationNotesUrl(applicationId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetApplicationNotesQueryKey = (applicationId: number) => {
+  return [`/api/applications/${applicationId}/notes`] as const;
+};
+
+export const getGetApplicationNotesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApplicationNotes>>,
+  TError = ErrorType<unknown>,
+>(
+  applicationId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getApplicationNotes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetApplicationNotesQueryKey(applicationId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getApplicationNotes>>
+  > = ({ signal }) =>
+    getApplicationNotes(applicationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!applicationId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApplicationNotes>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetApplicationNotesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApplicationNotes>>
+>;
+export type GetApplicationNotesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get recruiter notes for an application
+ */
+
+export function useGetApplicationNotes<
+  TData = Awaited<ReturnType<typeof getApplicationNotes>>,
+  TError = ErrorType<unknown>,
+>(
+  applicationId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getApplicationNotes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetApplicationNotesQueryOptions(
+    applicationId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a recruiter note to an application
+ */
+export const getCreateApplicationNoteUrl = (applicationId: number) => {
+  return `/api/applications/${applicationId}/notes`;
+};
+
+export const createApplicationNote = async (
+  applicationId: number,
+  createNoteBody: CreateNoteBody,
+  options?: RequestInit,
+): Promise<ApplicantNote> => {
+  return customFetch<ApplicantNote>(
+    getCreateApplicationNoteUrl(applicationId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(createNoteBody),
+    },
+  );
+};
+
+export const getCreateApplicationNoteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createApplicationNote>>,
+    TError,
+    { applicationId: number; data: BodyType<CreateNoteBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createApplicationNote>>,
+  TError,
+  { applicationId: number; data: BodyType<CreateNoteBody> },
+  TContext
+> => {
+  const mutationKey = ["createApplicationNote"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createApplicationNote>>,
+    { applicationId: number; data: BodyType<CreateNoteBody> }
+  > = (props) => {
+    const { applicationId, data } = props ?? {};
+
+    return createApplicationNote(applicationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateApplicationNoteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createApplicationNote>>
+>;
+export type CreateApplicationNoteMutationBody = BodyType<CreateNoteBody>;
+export type CreateApplicationNoteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add a recruiter note to an application
+ */
+export const useCreateApplicationNote = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createApplicationNote>>,
+    TError,
+    { applicationId: number; data: BodyType<CreateNoteBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createApplicationNote>>,
+  TError,
+  { applicationId: number; data: BodyType<CreateNoteBody> },
+  TContext
+> => {
+  return useMutation(getCreateApplicationNoteMutationOptions(options));
+};
+
+/**
+ * @summary Delete a recruiter note
+ */
+export const getDeleteApplicationNoteUrl = (
+  applicationId: number,
+  noteId: number,
+) => {
+  return `/api/applications/${applicationId}/notes/${noteId}`;
+};
+
+export const deleteApplicationNote = async (
+  applicationId: number,
+  noteId: number,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(
+    getDeleteApplicationNoteUrl(applicationId, noteId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteApplicationNoteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteApplicationNote>>,
+    TError,
+    { applicationId: number; noteId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteApplicationNote>>,
+  TError,
+  { applicationId: number; noteId: number },
+  TContext
+> => {
+  const mutationKey = ["deleteApplicationNote"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteApplicationNote>>,
+    { applicationId: number; noteId: number }
+  > = (props) => {
+    const { applicationId, noteId } = props ?? {};
+
+    return deleteApplicationNote(applicationId, noteId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteApplicationNoteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteApplicationNote>>
+>;
+
+export type DeleteApplicationNoteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a recruiter note
+ */
+export const useDeleteApplicationNote = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteApplicationNote>>,
+    TError,
+    { applicationId: number; noteId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteApplicationNote>>,
+  TError,
+  { applicationId: number; noteId: number },
+  TContext
+> => {
+  return useMutation(getDeleteApplicationNoteMutationOptions(options));
+};
 
 /**
  * @summary Get analytics data for the authenticated recruiter

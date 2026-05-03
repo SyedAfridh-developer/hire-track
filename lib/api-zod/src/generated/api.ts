@@ -1166,6 +1166,47 @@ export const GetUnreadMessageCountResponse = zod.object({
 });
 
 /**
+ * @summary Get recruiter notes for an application
+ */
+export const GetApplicationNotesParams = zod.object({
+  applicationId: zod.coerce.number(),
+});
+
+export const GetApplicationNotesResponseItem = zod.object({
+  id: zod.number(),
+  applicationId: zod.number(),
+  recruiterId: zod.number(),
+  body: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const GetApplicationNotesResponse = zod.array(
+  GetApplicationNotesResponseItem,
+);
+
+/**
+ * @summary Add a recruiter note to an application
+ */
+export const CreateApplicationNoteParams = zod.object({
+  applicationId: zod.coerce.number(),
+});
+
+export const CreateApplicationNoteBody = zod.object({
+  body: zod.string().min(1),
+});
+
+/**
+ * @summary Delete a recruiter note
+ */
+export const DeleteApplicationNoteParams = zod.object({
+  applicationId: zod.coerce.number(),
+  noteId: zod.coerce.number(),
+});
+
+export const DeleteApplicationNoteResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
  * @summary Get analytics data for the authenticated recruiter
  */
 export const GetRecruiterAnalyticsResponse = zod.object({

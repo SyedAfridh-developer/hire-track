@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, applicationsTable, jobsTable, companiesTable, profilesTable, usersTable, notificationsTable } from "@workspace/db";
+import { db, applicationsTable, jobsTable, companiesTable, profilesTable, usersTable, notificationsTable, applicantNotesTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { authenticate, requireRole, AuthRequest } from "../middlewares/auth";
 
@@ -146,6 +146,41 @@ router.patch("/applications/:applicationId/status", authenticate, requireRole("r
   }
 
   res.json(await buildApplicationResponse(updated));
+});
+
+// GET /api/applications/:applicationId/notes — recruiter only
+router.get("/:applicationId/notes", authenticate, requireRole("recruiter"), async (req: AuthRequest, res) => {
+  const applicationId = Number(req.params["applicationId"]);
+  const recruiterId = req.user!.id;
+  const notes = await db
+    .select()
+    .from(applicantNotesTable)
+    .where(and(eq(applicantNotesTable.applicationId, applicationId), eq(applicantNotesTable.recruiterId, recruiterId)))
+    .orderBy(applicantNotesTable.createdAt);
+  res.json(notes);
+});
+
+// POST /api/applications/:applicationId/notes
+router.post("/:applicationId/notes", authenticate, requireRole("recruiter"), async (req: AuthRequest, res) => {
+  const applicationId = Number(req.params["applicationId"]);
+  const recruiterId = req.user!.id;
+  const { body } = req.body as { body: string };
+  if (!body?.trim()) { res.status(400).json({ message: "Note body is required" }); return; }
+  const [note] = await db
+    .insert(applicantNotesTable)
+    .values({ applicationId, recruiterId, body: body.trim() })
+    .returning();
+  res.status(201).json(note);
+});
+
+// DELETE /api/applications/:applicationId/notes/:noteId
+router.delete("/:applicationId/notes/:noteId", authenticate, requireRole("recruiter"), async (req: AuthRequest, res) => {
+  const noteId = Number(req.params["noteId"]);
+  const recruiterId = req.user!.id;
+  const [note] = await db.select().from(applicantNotesTable).where(eq(applicantNotesTable.id, noteId)).limit(1);
+  if (!note || note.recruiterId !== recruiterId) { res.status(404).json({ message: "Note not found" }); return; }
+  await db.delete(applicantNotesTable).where(eq(applicantNotesTable.id, noteId));
+  res.json({ message: "Note deleted" });
 });
 
 export default router;

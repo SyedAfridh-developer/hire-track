@@ -354,6 +354,19 @@ export interface CreateAlertBody {
   jobType?: CreateAlertBodyJobType;
 }
 
+export interface ApplicantNote {
+  id: number;
+  applicationId: number;
+  recruiterId: number;
+  body: string;
+  createdAt: string;
+}
+
+export interface CreateNoteBody {
+  /** @minLength 1 */
+  body: string;
+}
+
 export interface AnalyticsDailyCount {
   date: string;
   count: number;

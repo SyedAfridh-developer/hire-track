@@ -772,6 +772,80 @@ paths:
                     type: integer
                 required: [unreadCount]
 
+  /applications/{applicationId}/notes:
+    get:
+      operationId: getApplicationNotes
+      tags: [applications]
+      summary: Get recruiter notes for an application
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApplicantNote"
+    post:
+      operationId: createApplicationNote
+      tags: [applications]
+      summary: Add a recruiter note to an application
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNoteBody"
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicantNote"
+
+  /applications/{applicationId}/notes/{noteId}:
+    delete:
+      operationId: deleteApplicationNote
+      tags: [applications]
+      summary: Delete a recruiter note
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: noteId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
   /analytics/recruiter:
     get:
       operationId: getRecruiterAnalytics
@@ -1346,6 +1420,30 @@ components:
         jobType:
           type: string
           enum: [full-time, part-time, contract, internship, remote]
+
+    ApplicantNote:
+      type: object
+      properties:
+        id:
+          type: integer
+        applicationId:
+          type: integer
+        recruiterId:
+          type: integer
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, applicationId, recruiterId, body, createdAt]
+
+    CreateNoteBody:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+      required: [body]
 
     AnalyticsDailyCount:
       type: object

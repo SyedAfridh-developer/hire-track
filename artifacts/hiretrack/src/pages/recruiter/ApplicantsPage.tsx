@@ -17,6 +17,7 @@ import {
   ArrowUpDown, TrendingUp, X, CheckSquare,
 } from "lucide-react";
 import { MessageThread } from "@/components/messages/MessageThread";
+import { ApplicantNotes } from "@/components/applicants/ApplicantNotes";
 
 const STATUS_OPTIONS = [
   { value: "applied",     label: "Applied",     color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
@@ -379,6 +380,8 @@ export default function ApplicantsPage() {
                           <p className="text-sm text-muted-foreground mt-2 bg-muted rounded p-3 whitespace-pre-line">{app.coverLetter}</p>
                         </details>
                       )}
+
+                      <ApplicantNotes applicationId={app.id} />
 
                       <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                         <span>Applied {new Date(app.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
