@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { authenticate, AuthRequest } from "../middlewares/auth";
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "hiretrack-secret-key";
+const JWT_SECRET = process.env.SESSION_SECRET || process.env.JWT_SECRET || "hiretrack-secret-key";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "hiretrack-refresh-secret";
 
 function generateTokens(user: { id: number; email: string; role: string }) {
