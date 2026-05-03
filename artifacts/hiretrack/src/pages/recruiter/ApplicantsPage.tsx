@@ -1,21 +1,74 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "wouter";
-import { useGetJobApplications, getGetJobApplicationsQueryKey, useGetJob, getGetJobQueryKey, useUpdateApplicationStatus } from "@workspace/api-client-react";
+import {
+  useGetJobApplications, getGetJobApplicationsQueryKey,
+  useGetJob, getGetJobQueryKey,
+  useUpdateApplicationStatus,
+} from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Users, FileText, Mail, MapPin, MessageCircle } from "lucide-react";
+import { ChevronLeft, Users, FileText, Mail, MapPin, MessageCircle, ArrowUpDown, TrendingUp } from "lucide-react";
 import { MessageThread } from "@/components/messages/MessageThread";
 
 const STATUS_OPTIONS = [
-  { value: "applied", label: "Applied", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
+  { value: "applied",     label: "Applied",     color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
   { value: "shortlisted", label: "Shortlisted", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },
-  { value: "rejected", label: "Rejected", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
-  { value: "hired", label: "Hired", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
+  { value: "rejected",    label: "Rejected",    color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
+  { value: "hired",       label: "Hired",       color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
 ];
+
+function computeMatchScore(candidateSkills: string[], jobSkills: string[]): number {
+  if (!jobSkills.length) return -1; // no skills defined — unscored
+  if (!candidateSkills.length) return 0;
+  const matched = jobSkills.filter((js) =>
+    candidateSkills.some((cs) => cs.toLowerCase().includes(js.toLowerCase()) || js.toLowerCase().includes(cs.toLowerCase()))
+  );
+  return Math.round((matched.length / jobSkills.length) * 100);
+}
+
+function getMatchedAndMissing(candidateSkills: string[], jobSkills: string[]) {
+  const matched: string[] = [];
+  const missing: string[] = [];
+  for (const js of jobSkills) {
+    const found = candidateSkills.some(
+      (cs) => cs.toLowerCase().includes(js.toLowerCase()) || js.toLowerCase().includes(cs.toLowerCase())
+    );
+    if (found) matched.push(js);
+    else missing.push(js);
+  }
+  return { matched, missing };
+}
+
+function ScoreBadge({ score }: { score: number }) {
+  if (score === -1) {
+    return (
+      <div className="flex flex-col items-center shrink-0">
+        <div className="w-12 h-12 rounded-full border-2 border-muted flex items-center justify-center">
+          <span className="text-xs text-muted-foreground font-medium">N/A</span>
+        </div>
+        <span className="text-[10px] text-muted-foreground mt-0.5">match</span>
+      </div>
+    );
+  }
+
+  const color =
+    score >= 70 ? { ring: "border-green-500", text: "text-green-600", bg: "bg-green-50 dark:bg-green-900/20" }
+    : score >= 40 ? { ring: "border-amber-500", text: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20" }
+    : { ring: "border-red-400", text: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" };
+
+  return (
+    <div className="flex flex-col items-center shrink-0">
+      <div className={`w-12 h-12 rounded-full border-2 ${color.ring} ${color.bg} flex items-center justify-center`}>
+        <span className={`text-xs font-bold ${color.text}`}>{score}%</span>
+      </div>
+      <span className="text-[10px] text-muted-foreground mt-0.5">match</span>
+    </div>
+  );
+}
 
 export default function ApplicantsPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -23,6 +76,7 @@ export default function ApplicantsPage() {
   const queryClient = useQueryClient();
   const updateStatus = useUpdateApplicationStatus();
   const [messagingAppId, setMessagingAppId] = useState<number | null>(null);
+  const [sortByScore, setSortByScore] = useState(false);
 
   const { data: job } = useGetJob(Number(jobId), {
     query: { queryKey: getGetJobQueryKey(Number(jobId)), enabled: !!jobId },
@@ -31,6 +85,20 @@ export default function ApplicantsPage() {
   const { data: applications, isLoading } = useGetJobApplications(Number(jobId), {
     query: { queryKey: getGetJobApplicationsQueryKey(Number(jobId)), enabled: !!jobId },
   });
+
+  const jobSkills = job?.skills ?? [];
+
+  const scoredApplications = useMemo(() => {
+    if (!applications) return [];
+    const withScores = applications.map((app) => ({
+      ...app,
+      matchScore: computeMatchScore(app.candidate?.skills ?? [], jobSkills),
+    }));
+    if (sortByScore) {
+      return [...withScores].sort((a, b) => b.matchScore - a.matchScore);
+    }
+    return withScores;
+  }, [applications, jobSkills, sortByScore]);
 
   function handleStatusChange(applicationId: number, status: string) {
     updateStatus.mutate(
@@ -45,22 +113,49 @@ export default function ApplicantsPage() {
     );
   }
 
+  const avgScore = useMemo(() => {
+    const scored = scoredApplications.filter((a) => a.matchScore >= 0);
+    if (!scored.length) return null;
+    return Math.round(scored.reduce((s, a) => s + a.matchScore, 0) / scored.length);
+  }, [scoredApplications]);
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
         <Link href="/recruiter/jobs"><ChevronLeft className="h-4 w-4 mr-1" />Back to jobs</Link>
       </Button>
 
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Applicants</h1>
-        {job && <p className="text-muted-foreground mt-0.5">for {job.title}</p>}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Applicants</h1>
+          {job && <p className="text-muted-foreground mt-0.5">for {job.title}</p>}
+        </div>
+        {scoredApplications.length > 0 && jobSkills.length > 0 && (
+          <div className="flex items-center gap-3 shrink-0">
+            {avgScore !== null && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-lg">
+                <TrendingUp className="h-3.5 w-3.5" />
+                Avg match: <span className="font-semibold text-foreground">{avgScore}%</span>
+              </div>
+            )}
+            <Button
+              variant={sortByScore ? "default" : "outline"}
+              size="sm"
+              className="gap-2"
+              onClick={() => setSortByScore((v) => !v)}
+            >
+              <ArrowUpDown className="h-3.5 w-3.5" />
+              {sortByScore ? "Sorted by match" : "Sort by match"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
         <div className="space-y-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-lg" />)}
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-36 w-full rounded-lg" />)}
         </div>
-      ) : !applications?.length ? (
+      ) : !scoredApplications.length ? (
         <Card>
           <CardContent className="py-16 text-center text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-4 opacity-30" />
@@ -70,21 +165,35 @@ export default function ApplicantsPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {applications.map((app) => {
+          {scoredApplications.map((app) => {
             const statusCfg = STATUS_OPTIONS.find((s) => s.value === app.status);
             const profile = app.candidate;
             const user = profile?.user;
+            const { matched, missing } = getMatchedAndMissing(profile?.skills ?? [], jobSkills);
+
             return (
               <Card key={app.id} data-testid={`applicant-card-${app.id}`} className="hover:shadow-sm transition-shadow">
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
+                    {/* Match score ring */}
+                    {jobSkills.length > 0 && <ScoreBadge score={app.matchScore} />}
+
+                    {/* Avatar */}
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
                       {user?.name?.charAt(0).toUpperCase() || "?"}
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-4 mb-2">
                         <div>
-                          <h3 className="font-semibold text-foreground">{user?.name}</h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-foreground">{user?.name}</h3>
+                            {statusCfg && (
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusCfg.color}`}>
+                                {statusCfg.label}
+                              </span>
+                            )}
+                          </div>
                           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-0.5">
                             <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{user?.email}</span>
                             {profile?.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{profile.location}</span>}
@@ -120,13 +229,30 @@ export default function ApplicantsPage() {
                         <p className="text-sm text-muted-foreground mb-2">{profile.headline}</p>
                       )}
 
-                      {profile?.skills && profile.skills.length > 0 && (
+                      {/* Skills breakdown: matched (green) + missing (red) */}
+                      {jobSkills.length > 0 && (matched.length > 0 || missing.length > 0) ? (
                         <div className="flex flex-wrap gap-1.5 mb-2">
-                          {profile.skills.slice(0, 5).map((s) => (
-                            <span key={s} className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{s}</span>
+                          {matched.map((s) => (
+                            <span key={s} className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 font-medium">
+                              ✓ {s}
+                            </span>
+                          ))}
+                          {missing.map((s) => (
+                            <span key={s} className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 line-through opacity-70">
+                              {s}
+                            </span>
                           ))}
                         </div>
-                      )}
+                      ) : profile?.skills && profile.skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {profile.skills.slice(0, 6).map((s) => (
+                            <span key={s} className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{s}</span>
+                          ))}
+                          {profile.skills.length > 6 && (
+                            <span className="text-xs text-muted-foreground">+{profile.skills.length - 6} more</span>
+                          )}
+                        </div>
+                      ) : null}
 
                       {app.coverLetter && (
                         <details className="mt-2">
