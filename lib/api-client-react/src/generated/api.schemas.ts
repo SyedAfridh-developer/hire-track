@@ -354,6 +354,32 @@ export interface CreateAlertBody {
   jobType?: CreateAlertBodyJobType;
 }
 
+export interface AnalyticsDailyCount {
+  date: string;
+  count: number;
+}
+
+export interface AnalyticsStatusCount {
+  status: string;
+  count: number;
+}
+
+export interface AnalyticsTopJob {
+  jobId: number;
+  title: string;
+  applicantCount: number;
+}
+
+export interface RecruiterAnalytics {
+  totalJobs: number;
+  totalApplications: number;
+  activeJobs: number;
+  hiredCount: number;
+  applicationsOverTime: AnalyticsDailyCount[];
+  statusBreakdown: AnalyticsStatusCount[];
+  topJobs: AnalyticsTopJob[];
+}
+
 export type ListJobsParams = {
   page?: number;
   limit?: number;

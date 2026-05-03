@@ -40,6 +40,7 @@ import type {
   Notification,
   NotificationsResponse,
   Profile,
+  RecruiterAnalytics,
   RecruiterDashboard,
   RefreshBody,
   RegisterBody,
@@ -3079,6 +3080,81 @@ export function useGetUnreadMessageCount<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetUnreadMessageCountQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get analytics data for the authenticated recruiter
+ */
+export const getGetRecruiterAnalyticsUrl = () => {
+  return `/api/analytics/recruiter`;
+};
+
+export const getRecruiterAnalytics = async (
+  options?: RequestInit,
+): Promise<RecruiterAnalytics> => {
+  return customFetch<RecruiterAnalytics>(getGetRecruiterAnalyticsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRecruiterAnalyticsQueryKey = () => {
+  return [`/api/analytics/recruiter`] as const;
+};
+
+export const getGetRecruiterAnalyticsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRecruiterAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getRecruiterAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRecruiterAnalyticsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getRecruiterAnalytics>>
+  > = ({ signal }) => getRecruiterAnalytics({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRecruiterAnalytics>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRecruiterAnalyticsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRecruiterAnalytics>>
+>;
+export type GetRecruiterAnalyticsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get analytics data for the authenticated recruiter
+ */
+
+export function useGetRecruiterAnalytics<
+  TData = Awaited<ReturnType<typeof getRecruiterAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getRecruiterAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRecruiterAnalyticsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

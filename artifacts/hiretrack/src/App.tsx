@@ -19,6 +19,7 @@ import ProfilePage from "@/pages/candidate/ProfilePage";
 import RecruiterJobsListPage from "@/pages/recruiter/JobsListPage";
 import JobFormPage from "@/pages/recruiter/JobFormPage";
 import ApplicantsPage from "@/pages/recruiter/ApplicantsPage";
+import AnalyticsPage from "@/pages/recruiter/AnalyticsPage";
 import CompanyPage from "@/pages/recruiter/CompanyPage";
 import ResumePage from "@/pages/candidate/ResumePage";
 import SavedJobsPage from "@/pages/candidate/SavedJobsPage";
@@ -128,6 +129,11 @@ function Router() {
             <Route path="/recruiter/jobs">
               <ProtectedRoute allowedRoles={["recruiter"]}>
                 <RecruiterJobsListPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/recruiter/analytics">
+              <ProtectedRoute allowedRoles={["recruiter"]}>
+                <AnalyticsPage />
               </ProtectedRoute>
             </Route>
             <Route path="/recruiter/company">

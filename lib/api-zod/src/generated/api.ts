@@ -1164,3 +1164,32 @@ export const MarkThreadReadResponse = zod.object({
 export const GetUnreadMessageCountResponse = zod.object({
   unreadCount: zod.number(),
 });
+
+/**
+ * @summary Get analytics data for the authenticated recruiter
+ */
+export const GetRecruiterAnalyticsResponse = zod.object({
+  totalJobs: zod.number(),
+  totalApplications: zod.number(),
+  activeJobs: zod.number(),
+  hiredCount: zod.number(),
+  applicationsOverTime: zod.array(
+    zod.object({
+      date: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  statusBreakdown: zod.array(
+    zod.object({
+      status: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  topJobs: zod.array(
+    zod.object({
+      jobId: zod.number(),
+      title: zod.string(),
+      applicantCount: zod.number(),
+    }),
+  ),
+});

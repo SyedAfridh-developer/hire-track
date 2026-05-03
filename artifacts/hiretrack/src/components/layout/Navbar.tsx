@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings, Bookmark, Bell } from "lucide-react";
+import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings, Bookmark, Bell, BarChart2 } from "lucide-react";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { MessagesNavBadge } from "./MessagesNavBadge";
 
@@ -66,13 +66,22 @@ export function Navbar() {
                 )}
 
                 {isRecruiter && (
-                  <Link
-                    href="/recruiter/jobs"
-                    className={`flex items-center gap-2 text-sm font-medium ${location.startsWith("/recruiter/jobs") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <BriefcaseBusiness className="h-4 w-4" />
-                    My Jobs
-                  </Link>
+                  <>
+                    <Link
+                      href="/recruiter/jobs"
+                      className={`flex items-center gap-2 text-sm font-medium ${location.startsWith("/recruiter/jobs") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <BriefcaseBusiness className="h-4 w-4" />
+                      My Jobs
+                    </Link>
+                    <Link
+                      href="/recruiter/analytics"
+                      className={`flex items-center gap-2 text-sm font-medium ${location === "/recruiter/analytics" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <BarChart2 className="h-4 w-4" />
+                      Analytics
+                    </Link>
+                  </>
                 )}
               </div>
             )}
