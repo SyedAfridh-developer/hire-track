@@ -967,3 +967,49 @@ export const GetCandidateDashboardResponse = zod.object({
     }),
   ),
 });
+
+/**
+ * @summary Get notifications for the current user
+ */
+export const GetNotificationsResponse = zod.object({
+  notifications: zod.array(
+    zod.object({
+      id: zod.number(),
+      userId: zod.number(),
+      type: zod.enum(["status_change", "new_application"]),
+      title: zod.string(),
+      message: zod.string(),
+      isRead: zod.boolean(),
+      relatedApplicationId: zod.number().nullish(),
+      relatedJobId: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  unreadCount: zod.number(),
+});
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Mark a single notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  notificationId: zod.coerce.number(),
+});
+
+export const MarkNotificationReadResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  type: zod.enum(["status_change", "new_application"]),
+  title: zod.string(),
+  message: zod.string(),
+  isRead: zod.boolean(),
+  relatedApplicationId: zod.number().nullish(),
+  relatedJobId: zod.number().nullish(),
+  createdAt: zod.coerce.date(),
+});

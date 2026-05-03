@@ -6,6 +6,7 @@ import companiesRouter from "./companies";
 import jobsRouter from "./jobs";
 import applicationsRouter from "./applications";
 import dashboardRouter from "./dashboard";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use("/companies", companiesRouter);
 router.use("/jobs", jobsRouter);
 router.use("/", applicationsRouter);
 router.use("/dashboard", dashboardRouter);
+router.use("/notifications", notificationsRouter);
 
 export default router;

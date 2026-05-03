@@ -265,6 +265,31 @@ export interface CandidateDashboard {
   recentApplications: Application[];
 }
 
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
+
+export const NotificationType = {
+  status_change: "status_change",
+  new_application: "new_application",
+} as const;
+
+export interface Notification {
+  id: number;
+  userId: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  relatedApplicationId?: number | null;
+  relatedJobId?: number | null;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unreadCount: number;
+}
+
 export type ListJobsParams = {
   page?: number;
   limit?: number;
@@ -284,3 +309,7 @@ export const ListJobsJobType = {
   internship: "internship",
   remote: "remote",
 } as const;
+
+export type MarkAllNotificationsRead200 = {
+  message: string;
+};

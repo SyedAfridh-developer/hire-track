@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings } from "lucide-react";
+import { NotificationsDropdown } from "./NotificationsDropdown";
 
 export function Navbar() {
   const { isAuthenticated, role, logout, user } = useAuth();
@@ -64,7 +65,7 @@ export function Navbar() {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {!isAuthenticated ? (
               <>
                 <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -75,10 +76,11 @@ export function Navbar() {
                 </Button>
               </>
             ) : (
-              <div className="flex items-center gap-4">
-                <div className="text-sm font-medium hidden sm:block">
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-medium hidden sm:block mr-2">
                   {user?.name}
                 </div>
+                {isCandidate && <NotificationsDropdown />}
                 {isCandidate && (
                   <Button variant="ghost" size="icon" asChild>
                     <Link href="/profile" title="Profile">
