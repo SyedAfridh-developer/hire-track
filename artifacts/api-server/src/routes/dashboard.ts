@@ -50,8 +50,8 @@ router.get("/recruiter", authenticate, requireRole("recruiter"), async (req: Aut
     statusCounts[app.status as keyof typeof statusCounts]++;
   }
 
-  // Build recent applications (up to 5)
-  const recentRaw = allApplications.slice(0, 5);
+  // Build recent applications (up to 10)
+  const recentRaw = allApplications.slice(0, 10);
   const recentApplications = await Promise.all(
     recentRaw.map(async (app) => {
       const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, app.jobId)).limit(1);
