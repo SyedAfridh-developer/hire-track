@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "wouter";
 import {
   useGetJobApplications, getGetJobApplicationsQueryKey,
@@ -8,10 +8,14 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Users, FileText, Mail, MapPin, MessageCircle, ArrowUpDown, TrendingUp } from "lucide-react";
+import {
+  ChevronLeft, Users, FileText, Mail, MapPin, MessageCircle,
+  ArrowUpDown, TrendingUp, X, CheckSquare,
+} from "lucide-react";
 import { MessageThread } from "@/components/messages/MessageThread";
 
 const STATUS_OPTIONS = [
@@ -22,7 +26,7 @@ const STATUS_OPTIONS = [
 ];
 
 function computeMatchScore(candidateSkills: string[], jobSkills: string[]): number {
-  if (!jobSkills.length) return -1; // no skills defined — unscored
+  if (!jobSkills.length) return -1;
   if (!candidateSkills.length) return 0;
   const matched = jobSkills.filter((js) =>
     candidateSkills.some((cs) => cs.toLowerCase().includes(js.toLowerCase()) || js.toLowerCase().includes(cs.toLowerCase()))
@@ -54,7 +58,6 @@ function ScoreBadge({ score }: { score: number }) {
       </div>
     );
   }
-
   const color =
     score >= 70 ? { ring: "border-green-500", text: "text-green-600", bg: "bg-green-50 dark:bg-green-900/20" }
     : score >= 40 ? { ring: "border-amber-500", text: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20" }
@@ -77,6 +80,8 @@ export default function ApplicantsPage() {
   const updateStatus = useUpdateApplicationStatus();
   const [messagingAppId, setMessagingAppId] = useState<number | null>(null);
   const [sortByScore, setSortByScore] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const { data: job } = useGetJob(Number(jobId), {
     query: { queryKey: getGetJobQueryKey(Number(jobId)), enabled: !!jobId },
@@ -100,6 +105,29 @@ export default function ApplicantsPage() {
     return withScores;
   }, [applications, jobSkills, sortByScore]);
 
+  const allIds = useMemo(() => scoredApplications.map((a) => a.id), [scoredApplications]);
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+  const someSelected = selectedIds.size > 0;
+
+  const toggleSelect = useCallback((id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  }, [allSelected, allIds]);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
   function handleStatusChange(applicationId: number, status: string) {
     updateStatus.mutate(
       { applicationId, data: { status: status as any } },
@@ -111,6 +139,30 @@ export default function ApplicantsPage() {
         onError: () => toast({ title: "Failed to update status", variant: "destructive" }),
       }
     );
+  }
+
+  async function handleBulkStatusChange(status: string) {
+    setIsBulkUpdating(true);
+    const ids = Array.from(selectedIds);
+    let successCount = 0;
+    await Promise.all(
+      ids.map(
+        (applicationId) =>
+          new Promise<void>((resolve) => {
+            updateStatus.mutate(
+              { applicationId, data: { status: status as any } },
+              { onSuccess: () => { successCount++; resolve(); }, onError: () => resolve() }
+            );
+          })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: getGetJobApplicationsQueryKey(Number(jobId)) });
+    setIsBulkUpdating(false);
+    setSelectedIds(new Set());
+    toast({
+      title: `Updated ${successCount} of ${ids.length} applicant${ids.length > 1 ? "s" : ""}`,
+      description: `Status set to "${STATUS_OPTIONS.find((s) => s.value === status)?.label}"`,
+    });
   }
 
   const avgScore = useMemo(() => {
@@ -151,6 +203,47 @@ export default function ApplicantsPage() {
         )}
       </div>
 
+      {/* Bulk action toolbar */}
+      {someSelected && (
+        <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-lg px-4 py-2.5 sticky top-2 z-10 backdrop-blur-sm">
+          <CheckSquare className="h-4 w-4 text-primary shrink-0" />
+          <span className="text-sm font-medium text-foreground">
+            {selectedIds.size} candidate{selectedIds.size > 1 ? "s" : ""} selected
+          </span>
+          <div className="flex-1" />
+          <Select
+            onValueChange={(val) => handleBulkStatusChange(val)}
+            disabled={isBulkUpdating}
+          >
+            <SelectTrigger className="w-44 h-8 text-xs bg-background">
+              <SelectValue placeholder="Set status for all…" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-8 text-xs"
+            disabled={isBulkUpdating}
+            onClick={() => handleBulkStatusChange("rejected")}
+          >
+            Reject all
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={clearSelection}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-36 w-full rounded-lg" />)}
@@ -165,16 +258,43 @@ export default function ApplicantsPage() {
         </Card>
       ) : (
         <div className="space-y-3">
+          {/* Select-all row */}
+          <div className="flex items-center gap-2 px-1">
+            <Checkbox
+              id="select-all"
+              checked={allSelected}
+              onCheckedChange={toggleSelectAll}
+              aria-label="Select all applicants"
+            />
+            <label htmlFor="select-all" className="text-xs text-muted-foreground cursor-pointer select-none">
+              {allSelected ? "Deselect all" : `Select all ${allIds.length} applicants`}
+            </label>
+          </div>
+
           {scoredApplications.map((app) => {
             const statusCfg = STATUS_OPTIONS.find((s) => s.value === app.status);
             const profile = app.candidate;
             const user = profile?.user;
             const { matched, missing } = getMatchedAndMissing(profile?.skills ?? [], jobSkills);
+            const isSelected = selectedIds.has(app.id);
 
             return (
-              <Card key={app.id} data-testid={`applicant-card-${app.id}`} className="hover:shadow-sm transition-shadow">
+              <Card
+                key={app.id}
+                data-testid={`applicant-card-${app.id}`}
+                className={`hover:shadow-sm transition-all ${isSelected ? "ring-2 ring-primary/40 shadow-sm" : ""}`}
+              >
                 <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
+                    {/* Checkbox */}
+                    <div className="pt-1 shrink-0">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelect(app.id)}
+                        aria-label={`Select ${user?.name ?? "applicant"}`}
+                      />
+                    </div>
+
                     {/* Match score ring */}
                     {jobSkills.length > 0 && <ScoreBadge score={app.matchScore} />}
 
@@ -229,7 +349,6 @@ export default function ApplicantsPage() {
                         <p className="text-sm text-muted-foreground mb-2">{profile.headline}</p>
                       )}
 
-                      {/* Skills breakdown: matched (green) + missing (red) */}
                       {jobSkills.length > 0 && (matched.length > 0 || missing.length > 0) ? (
                         <div className="flex flex-wrap gap-1.5 mb-2">
                           {matched.map((s) => (
