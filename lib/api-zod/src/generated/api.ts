@@ -1027,6 +1027,43 @@ export const GetCandidateDashboardResponse = zod.object({
 });
 
 /**
+ * @summary Get candidate's job alerts
+ */
+export const GetMyAlertsResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  keyword: zod.string().nullish(),
+  location: zod.string().nullish(),
+  jobType: zod
+    .enum(["full-time", "part-time", "contract", "internship", "remote"])
+    .nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const GetMyAlertsResponse = zod.array(GetMyAlertsResponseItem);
+
+/**
+ * @summary Create a job alert (candidate)
+ */
+export const CreateAlertBody = zod.object({
+  keyword: zod.string().optional(),
+  location: zod.string().optional(),
+  jobType: zod
+    .enum(["full-time", "part-time", "contract", "internship", "remote"])
+    .optional(),
+});
+
+/**
+ * @summary Delete a job alert (candidate)
+ */
+export const DeleteAlertParams = zod.object({
+  alertId: zod.coerce.number(),
+});
+
+export const DeleteAlertResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
  * @summary Get notifications for the current user
  */
 export const GetNotificationsResponse = zod.object({
@@ -1034,7 +1071,7 @@ export const GetNotificationsResponse = zod.object({
     zod.object({
       id: zod.number(),
       userId: zod.number(),
-      type: zod.enum(["status_change", "new_application"]),
+      type: zod.enum(["status_change", "new_application", "job_alert"]),
       title: zod.string(),
       message: zod.string(),
       isRead: zod.boolean(),
@@ -1063,7 +1100,7 @@ export const MarkNotificationReadParams = zod.object({
 export const MarkNotificationReadResponse = zod.object({
   id: zod.number(),
   userId: zod.number(),
-  type: zod.enum(["status_change", "new_application"]),
+  type: zod.enum(["status_change", "new_application", "job_alert"]),
   title: zod.string(),
   message: zod.string(),
   isRead: zod.boolean(),

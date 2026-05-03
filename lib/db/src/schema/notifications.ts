@@ -4,6 +4,7 @@ import { usersTable } from "./users";
 export const notificationTypeEnum = pgEnum("notification_type", [
   "status_change",
   "new_application",
+  "job_alert",
 ]);
 
 export const notificationsTable = pgTable("notifications", {

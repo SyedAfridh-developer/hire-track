@@ -8,6 +8,7 @@ import applicationsRouter from "./applications";
 import dashboardRouter from "./dashboard";
 import notificationsRouter from "./notifications";
 import messagesRouter from "./messages";
+import alertsRouter from "./alerts";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use("/", applicationsRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/notifications", notificationsRouter);
 router.use("/messages", messagesRouter);
+router.use("/alerts", alertsRouter);
 
 export default router;

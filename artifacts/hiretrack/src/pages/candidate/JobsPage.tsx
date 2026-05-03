@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, MapPin, Building2, Clock, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { Search, MapPin, Building2, Clock, ChevronLeft, ChevronRight, Filter, BellPlus } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { CreateAlertDialog } from "@/components/alerts/CreateAlertDialog";
 
 const JOB_TYPES = ["all", "full-time", "part-time", "contract", "internship", "remote"];
 
@@ -19,12 +21,14 @@ const jobTypeColors: Record<string, string> = {
 };
 
 export default function JobsPage() {
+  const { isAuthenticated, role } = useAuth();
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
   const [jobType, setJobType] = useState("all");
   const [page, setPage] = useState(1);
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
+  const [alertOpen, setAlertOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedKeyword(keyword), 350);
@@ -54,9 +58,17 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Browse Jobs</h1>
-        <p className="text-muted-foreground mt-0.5">Find your next opportunity from thousands of listings</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Browse Jobs</h1>
+          <p className="text-muted-foreground mt-0.5">Find your next opportunity from thousands of listings</p>
+        </div>
+        {isAuthenticated && role === "candidate" && (
+          <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={() => setAlertOpen(true)}>
+            <BellPlus className="h-4 w-4" />
+            Create Alert
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -205,6 +217,16 @@ export default function JobsPage() {
           </Button>
         </div>
       )}
+
+      <CreateAlertDialog
+        open={alertOpen}
+        onOpenChange={setAlertOpen}
+        prefill={{
+          keyword: debouncedKeyword || undefined,
+          location: debouncedLocation || undefined,
+          jobType: jobType !== "all" ? jobType : undefined,
+        }}
+      />
     </div>
   );
 }

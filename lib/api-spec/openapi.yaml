@@ -24,6 +24,8 @@ tags:
     description: Dashboard and analytics
   - name: notifications
     description: In-app notification operations
+  - name: alerts
+    description: Job alert operations
 paths:
   /healthz:
     get:
@@ -567,6 +569,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CandidateDashboard"
+
+  /alerts:
+    get:
+      operationId: getMyAlerts
+      tags: [alerts]
+      summary: Get candidate's job alerts
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of job alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobAlert"
+    post:
+      operationId: createAlert
+      tags: [alerts]
+      summary: Create a job alert (candidate)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertBody"
+      responses:
+        "201":
+          description: Alert created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobAlert"
+
+  /alerts/{alertId}:
+    delete:
+      operationId: deleteAlert
+      tags: [alerts]
+      summary: Delete a job alert (candidate)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Alert deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
 
   /notifications:
     get:
@@ -1162,7 +1221,7 @@ components:
           type: integer
         type:
           type: string
-          enum: [status_change, new_application]
+          enum: [status_change, new_application, job_alert]
         title:
           type: string
         message:
@@ -1239,3 +1298,36 @@ components:
           type: string
           minLength: 1
       required: [body]
+
+    JobAlert:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        keyword:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        jobType:
+          type: string
+          enum: [full-time, part-time, contract, internship, remote]
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, createdAt]
+
+    CreateAlertBody:
+      type: object
+      properties:
+        keyword:
+          type: string
+        location:
+          type: string
+        jobType:
+          type: string
+          enum: [full-time, part-time, contract, internship, remote]

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, jobsTable, companiesTable, applicationsTable, savedJobsTable } from "@workspace/db";
+import { db, jobsTable, companiesTable, applicationsTable, savedJobsTable, jobAlertsTable, notificationsTable } from "@workspace/db";
 import { eq, and, ilike, sql, or, inArray } from "drizzle-orm";
 import { authenticate, requireRole, AuthRequest } from "../middlewares/auth";
 
@@ -157,6 +157,31 @@ router.post("/", authenticate, requireRole("recruiter"), async (req: AuthRequest
       skills: Array.isArray(skills) ? skills : [skills],
     })
     .returning();
+
+  // Fire job alert notifications asynchronously
+  (async () => {
+    try {
+      const alerts = await db.select().from(jobAlertsTable);
+      for (const alert of alerts) {
+        const keywordMatch = !alert.keyword ||
+          job.title.toLowerCase().includes(alert.keyword.toLowerCase()) ||
+          job.description.toLowerCase().includes(alert.keyword.toLowerCase());
+        const locationMatch = !alert.location ||
+          job.location.toLowerCase().includes(alert.location.toLowerCase());
+        const jobTypeMatch = !alert.jobType || job.jobType === alert.jobType;
+
+        if (keywordMatch && locationMatch && jobTypeMatch) {
+          await db.insert(notificationsTable).values({
+            userId: alert.userId,
+            type: "job_alert",
+            title: "New job matching your alert",
+            message: `"${job.title}" at ${company.name} matches your alert${alert.keyword ? ` for "${alert.keyword}"` : ""}.`,
+            relatedJobId: job.id,
+          });
+        }
+      }
+    } catch (_) { /* non-critical */ }
+  })();
 
   res.status(201).json(await buildJobResponse(job));
 });

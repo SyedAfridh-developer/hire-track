@@ -23,11 +23,13 @@ import type {
   CandidateDashboard,
   ChatMessage,
   Company,
+  CreateAlertBody,
   CreateJobBody,
   ErrorResponse,
   GetUnreadMessageCount200,
   HealthStatus,
   Job,
+  JobAlert,
   JobsListResponse,
   ListJobsParams,
   LoginBody,
@@ -2258,6 +2260,251 @@ export function useGetCandidateDashboard<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get candidate's job alerts
+ */
+export const getGetMyAlertsUrl = () => {
+  return `/api/alerts`;
+};
+
+export const getMyAlerts = async (
+  options?: RequestInit,
+): Promise<JobAlert[]> => {
+  return customFetch<JobAlert[]>(getGetMyAlertsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyAlertsQueryKey = () => {
+  return [`/api/alerts`] as const;
+};
+
+export const getGetMyAlertsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyAlerts>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyAlerts>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyAlertsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAlerts>>> = ({
+    signal,
+  }) => getMyAlerts({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyAlerts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyAlertsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyAlerts>>
+>;
+export type GetMyAlertsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get candidate's job alerts
+ */
+
+export function useGetMyAlerts<
+  TData = Awaited<ReturnType<typeof getMyAlerts>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyAlerts>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyAlertsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a job alert (candidate)
+ */
+export const getCreateAlertUrl = () => {
+  return `/api/alerts`;
+};
+
+export const createAlert = async (
+  createAlertBody: CreateAlertBody,
+  options?: RequestInit,
+): Promise<JobAlert> => {
+  return customFetch<JobAlert>(getCreateAlertUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createAlertBody),
+  });
+};
+
+export const getCreateAlertMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAlert>>,
+    TError,
+    { data: BodyType<CreateAlertBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAlert>>,
+  TError,
+  { data: BodyType<CreateAlertBody> },
+  TContext
+> => {
+  const mutationKey = ["createAlert"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAlert>>,
+    { data: BodyType<CreateAlertBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAlert(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAlertMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAlert>>
+>;
+export type CreateAlertMutationBody = BodyType<CreateAlertBody>;
+export type CreateAlertMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a job alert (candidate)
+ */
+export const useCreateAlert = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAlert>>,
+    TError,
+    { data: BodyType<CreateAlertBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createAlert>>,
+  TError,
+  { data: BodyType<CreateAlertBody> },
+  TContext
+> => {
+  return useMutation(getCreateAlertMutationOptions(options));
+};
+
+/**
+ * @summary Delete a job alert (candidate)
+ */
+export const getDeleteAlertUrl = (alertId: number) => {
+  return `/api/alerts/${alertId}`;
+};
+
+export const deleteAlert = async (
+  alertId: number,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getDeleteAlertUrl(alertId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAlertMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAlert>>,
+    TError,
+    { alertId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAlert>>,
+  TError,
+  { alertId: number },
+  TContext
+> => {
+  const mutationKey = ["deleteAlert"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAlert>>,
+    { alertId: number }
+  > = (props) => {
+    const { alertId } = props ?? {};
+
+    return deleteAlert(alertId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAlertMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAlert>>
+>;
+
+export type DeleteAlertMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a job alert (candidate)
+ */
+export const useDeleteAlert = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAlert>>,
+    TError,
+    { alertId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAlert>>,
+  TError,
+  { alertId: number },
+  TContext
+> => {
+  return useMutation(getDeleteAlertMutationOptions(options));
+};
 
 /**
  * @summary Get notifications for the current user

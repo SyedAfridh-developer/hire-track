@@ -22,6 +22,7 @@ import ApplicantsPage from "@/pages/recruiter/ApplicantsPage";
 import CompanyPage from "@/pages/recruiter/CompanyPage";
 import ResumePage from "@/pages/candidate/ResumePage";
 import SavedJobsPage from "@/pages/candidate/SavedJobsPage";
+import AlertsPage from "@/pages/candidate/AlertsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -96,6 +97,11 @@ function Router() {
             <Route path="/saved-jobs">
               <ProtectedRoute allowedRoles={["candidate"]}>
                 <SavedJobsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/alerts">
+              <ProtectedRoute allowedRoles={["candidate"]}>
+                <AlertsPage />
               </ProtectedRoute>
             </Route>
 

@@ -271,6 +271,7 @@ export type NotificationType =
 export const NotificationType = {
   status_change: "status_change",
   new_application: "new_application",
+  job_alert: "job_alert",
 } as const;
 
 export interface Notification {
@@ -313,6 +314,44 @@ export interface MessageThreadResponse {
 export interface SendMessageBody {
   /** @minLength 1 */
   body: string;
+}
+
+export type JobAlertJobType =
+  | (typeof JobAlertJobType)[keyof typeof JobAlertJobType]
+  | null;
+
+export const JobAlertJobType = {
+  "full-time": "full-time",
+  "part-time": "part-time",
+  contract: "contract",
+  internship: "internship",
+  remote: "remote",
+} as const;
+
+export interface JobAlert {
+  id: number;
+  userId: number;
+  keyword?: string | null;
+  location?: string | null;
+  jobType?: JobAlertJobType;
+  createdAt: string;
+}
+
+export type CreateAlertBodyJobType =
+  (typeof CreateAlertBodyJobType)[keyof typeof CreateAlertBodyJobType];
+
+export const CreateAlertBodyJobType = {
+  "full-time": "full-time",
+  "part-time": "part-time",
+  contract: "contract",
+  internship: "internship",
+  remote: "remote",
+} as const;
+
+export interface CreateAlertBody {
+  keyword?: string;
+  location?: string;
+  jobType?: CreateAlertBodyJobType;
 }
 
 export type ListJobsParams = {
