@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import {
   useGetJobApplications, getGetJobApplicationsQueryKey,
@@ -14,11 +14,46 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft, Users, FileText, Mail, MapPin, MessageCircle,
-  ArrowUpDown, TrendingUp, X, CheckSquare, CalendarClock,
+  ArrowUpDown, TrendingUp, X, CheckSquare, CalendarClock, ClipboardList, Star, Clock,
 } from "lucide-react";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { ApplicantNotes } from "@/components/applicants/ApplicantNotes";
 import { ScheduleInterviewDialog } from "@/components/applicants/ScheduleInterviewDialog";
+import { SendAssessmentDialog } from "@/components/recruiter/SendAssessmentDialog";
+
+interface AssessmentSubmission {
+  id: number;
+  applicationId: number;
+  status: "pending" | "submitted" | "scored";
+  score: number | null;
+  maxScore: number;
+}
+
+function AssessmentScoreBadge({ submission }: { submission: AssessmentSubmission }) {
+  if (submission.status === "pending") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+        <ClipboardList className="h-2.5 w-2.5" /> Quiz sent
+      </span>
+    );
+  }
+  if (submission.status === "submitted" || (submission.status === "scored" && submission.score === null)) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-medium">
+        <Clock className="h-2.5 w-2.5" /> Pending review
+      </span>
+    );
+  }
+  const pct = submission.maxScore > 0 ? Math.round((submission.score! / submission.maxScore) * 100) : 100;
+  const color = pct >= 70 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+    : pct >= 40 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${color}`}>
+      <Star className="h-2.5 w-2.5" /> {submission.score}/{submission.maxScore} ({pct}%)
+    </span>
+  );
+}
 
 const STATUS_OPTIONS = [
   { value: "applied",     label: "Applied",     color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
@@ -82,9 +117,21 @@ export default function ApplicantsPage() {
   const updateStatus = useUpdateApplicationStatus();
   const [messagingAppId, setMessagingAppId] = useState<number | null>(null);
   const [interviewApp, setInterviewApp] = useState<{ id: number; name: string } | null>(null);
+  const [assessmentApp, setAssessmentApp] = useState<{ id: number; name: string } | null>(null);
+  const [submissions, setSubmissions] = useState<AssessmentSubmission[]>([]);
   const [sortByScore, setSortByScore] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    fetch("/api/assessments/submissions", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((r) => r.ok ? r.json() : [])
+      .then((d) => Array.isArray(d) ? setSubmissions(d) : {})
+      .catch(() => {});
+  }, []);
 
   const { data: job } = useGetJob(Number(jobId), {
     query: { queryKey: getGetJobQueryKey(Number(jobId)), enabled: !!jobId },
@@ -316,6 +363,10 @@ export default function ApplicantsPage() {
                                 {statusCfg.label}
                               </span>
                             )}
+                            {(() => {
+                              const sub = submissions.find((s) => s.applicationId === app.id);
+                              return sub ? <AssessmentScoreBadge submission={sub} /> : null;
+                            })()}
                           </div>
                           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-0.5">
                             <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{user?.email}</span>
@@ -353,6 +404,15 @@ export default function ApplicantsPage() {
                           >
                             <CalendarClock className="h-3.5 w-3.5" />
                             Interview
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5"
+                            onClick={() => setAssessmentApp({ id: app.id, name: user?.name ?? "Candidate" })}
+                          >
+                            <ClipboardList className="h-3.5 w-3.5" />
+                            Quiz
                           </Button>
                         </div>
                       </div>
@@ -432,6 +492,15 @@ export default function ApplicantsPage() {
           jobTitle={job?.title ?? ""}
           open={interviewApp !== null}
           onOpenChange={(v) => { if (!v) setInterviewApp(null); }}
+        />
+      )}
+
+      {assessmentApp !== null && (
+        <SendAssessmentDialog
+          open={assessmentApp !== null}
+          onOpenChange={(v) => { if (!v) setAssessmentApp(null); }}
+          applicationId={assessmentApp.id}
+          candidateName={assessmentApp.name}
         />
       )}
     </div>

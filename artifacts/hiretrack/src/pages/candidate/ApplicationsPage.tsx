@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, MapPin, Clock, FileText, ExternalLink, CheckCircle, XCircle, Star, MessageCircle } from "lucide-react";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { InterviewStatusBadge } from "@/components/applicants/InterviewStatusBadge";
+import { AssessmentQuiz } from "@/components/candidate/AssessmentQuiz";
 
 const STATUS_CONFIG = {
   applied: { label: "Applied", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300", Icon: FileText },
@@ -76,6 +77,7 @@ export default function ApplicationsPage() {
                         </p>
                       )}
                       <InterviewStatusBadge applicationId={app.id} />
+                      <AssessmentQuiz applicationId={app.id} />
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${cfg?.color}`} data-testid={`status-${app.id}`}>

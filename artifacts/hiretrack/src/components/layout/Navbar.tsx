@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings, Bookmark, Bell, BarChart2, CalendarDays, Code2, LayoutGrid } from "lucide-react";
+import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings, Bookmark, Bell, BarChart2, CalendarDays, Code2, LayoutGrid, ClipboardList } from "lucide-react";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { MessagesNavBadge } from "./MessagesNavBadge";
 
@@ -94,6 +94,13 @@ export function Navbar() {
                     >
                       <LayoutGrid className="h-4 w-4" />
                       Pipeline
+                    </Link>
+                    <Link
+                      href="/recruiter/assessments"
+                      className={`flex items-center gap-2 text-sm font-medium ${location === "/recruiter/assessments" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      Assessments
                     </Link>
                     <Link
                       href="/recruiter/embed"

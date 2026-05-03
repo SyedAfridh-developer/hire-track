@@ -14,6 +14,7 @@ import interviewsRouter from "./interviews";
 import digestRouter from "./digest";
 import embedRouter from "./embed";
 import referralsRouter from "./referrals";
+import assessmentsRouter from "./assessments";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use("/recruiter", interviewsRouter);
 router.use("/recruiter", digestRouter);
 router.use("/embed", embedRouter);
 router.use("/referral", referralsRouter);
+router.use("/assessments", assessmentsRouter);
 
 export default router;

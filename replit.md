@@ -25,13 +25,15 @@ A production-ready job portal with two roles: **Candidate** and **Recruiter**.
 
 ## Database Schema
 
-Tables: `users`, `profiles`, `companies`, `jobs`, `applications`
+Tables: `users`, `profiles`, `companies`, `jobs`, `applications`, `assessments`, `assessment_submissions`
 
 - **users**: id, name, email, password_hash, role (candidate|recruiter)
 - **profiles**: linked to users (candidate only) — headline, bio, location, phone, skills[], experience[], education[], resumeUrl
 - **companies**: linked to users (recruiter only) — name, description, website, location, industry, size
 - **jobs**: linked to recruiters + companies — title, description, location, jobType, salaryMin, salaryMax, skills[], isActive
 - **applications**: links candidates to jobs — status (applied|shortlisted|rejected|hired), coverLetter, resumeUrl
+- **assessments**: quiz templates owned by recruiters — title, description, questions (JSONB), timeLimitMinutes
+- **assessment_submissions**: sent quiz instances — assessmentId, applicationId, candidateId, answers (JSONB), score, maxScore, status (pending|submitted|scored)
 
 ## Demo Credentials
 
@@ -72,9 +74,9 @@ All routes prefixed with `/api`:
 
 **Public**: Landing, Login, Register, Browse Jobs, Job Detail
 
-**Candidate**: Dashboard, Browse Jobs, Job Detail (apply), My Applications (with interview card + confirm/reschedule), Profile, Resume Builder, Saved Jobs, Alerts
+**Candidate**: Dashboard, Browse Jobs, Job Detail (apply), My Applications (with interview card + confirm/reschedule + assessment quiz), Profile, Resume Builder, Saved Jobs, Alerts
 
-**Recruiter**: Dashboard (activity feed), My Jobs (CRUD), Post/Edit Job, Applicants ATS (bulk actions, match scoring, private notes, schedule interview), Company Profile, Analytics
+**Recruiter**: Dashboard (activity feed), My Jobs (CRUD), Post/Edit Job, Applicants ATS (bulk actions, match scoring, private notes, schedule interview, send quiz), Company Profile, Analytics, Pipeline (Kanban), Assessments (quiz template manager)
 
 ## Key Features
 
@@ -90,6 +92,11 @@ All routes prefixed with `/api`:
 - Saved jobs and job alerts (email-style notifications)
 - Recruiter analytics dashboard (charts: applications over time, status breakdown, top jobs)
 - Recruiter activity feed (live, 30s refresh)
+- Kanban pipeline board: drag-and-drop across Applied/Shortlisted/Hired/Rejected columns, per-job filter, optimistic updates
+- Daily email digest for recruiters (cron 08:00, digest settings per recruiter)
+- Job embed widget: public JSON/iframe/widget.js endpoints + recruiter embed page with copy-paste snippets
+- Candidate referral links: create/track/convert referral links per job, click tracking, conversion on apply, recruiter leaderboard in analytics
+- Skills assessment: recruiter creates quiz templates (MC + text), sends to shortlisted candidates, candidates complete in-app; MC auto-scored, scores shown on applicant cards
 
 ## Environment Variables
 

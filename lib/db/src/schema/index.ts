@@ -11,3 +11,4 @@ export * from "./applicantNotes";
 export * from "./interviewSchedules";
 export * from "./digestSettings";
 export * from "./referralLinks";
+export * from "./assessments";
