@@ -3,20 +3,31 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: HireTrack Job Portal API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: jobs
+    description: Job listing operations
+  - name: applications
+    description: Application operations
+  - name: profile
+    description: User profile operations
+  - name: companies
+    description: Company profile operations
+  - name: dashboard
+    description: Dashboard and analytics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +35,916 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: Registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshBody"
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get current user's profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+    put:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update candidate profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+  /profile/resume:
+    post:
+      operationId: uploadResume
+      tags: [profile]
+      summary: Upload resume (base64 PDF)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadResumeBody"
+      responses:
+        "200":
+          description: Resume uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeUploadResponse"
+
+  /companies/me:
+    get:
+      operationId: getMyCompany
+      tags: [companies]
+      summary: Get recruiter's company profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Company profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+    put:
+      operationId: updateCompany
+      tags: [companies]
+      summary: Update company profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCompanyBody"
+      responses:
+        "200":
+          description: Updated company
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+
+  /companies/{companyId}:
+    get:
+      operationId: getCompany
+      tags: [companies]
+      summary: Get company by ID
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Company profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List jobs with search and filter
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: skills
+          in: query
+          schema:
+            type: string
+        - name: jobType
+          in: query
+          schema:
+            type: string
+            enum: [full-time, part-time, contract, internship, remote]
+      responses:
+        "200":
+          description: Paginated job list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobsListResponse"
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Create a job posting (recruiter)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobBody"
+      responses:
+        "201":
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+
+  /jobs/featured:
+    get:
+      operationId: getFeaturedJobs
+      tags: [jobs]
+      summary: Get featured/recent jobs for landing page
+      responses:
+        "200":
+          description: Featured jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+
+  /jobs/{jobId}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get job by ID
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+    put:
+      operationId: updateJob
+      tags: [jobs]
+      summary: Update a job posting (recruiter)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobBody"
+      responses:
+        "200":
+          description: Updated job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+    delete:
+      operationId: deleteJob
+      tags: [jobs]
+      summary: Delete a job posting (recruiter)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /jobs/{jobId}/applications:
+    get:
+      operationId: getJobApplications
+      tags: [applications]
+      summary: Get all applicants for a job (recruiter)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Application"
+
+  /applications:
+    post:
+      operationId: applyForJob
+      tags: [applications]
+      summary: Apply for a job (candidate)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyBody"
+      responses:
+        "201":
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+    get:
+      operationId: getMyApplications
+      tags: [applications]
+      summary: Get candidate's own applications
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Applications list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Application"
+
+  /applications/{applicationId}/status:
+    patch:
+      operationId: updateApplicationStatus
+      tags: [applications]
+      summary: Update application status (recruiter ATS)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusBody"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+
+  /dashboard/recruiter:
+    get:
+      operationId: getRecruiterDashboard
+      tags: [dashboard]
+      summary: Recruiter dashboard stats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecruiterDashboard"
+
+  /dashboard/candidate:
+    get:
+      operationId: getCandidateDashboard
+      tags: [dashboard]
+      summary: Candidate dashboard summary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Candidate summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CandidateDashboard"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required: [message]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+      required: [accessToken, refreshToken]
+
+    RegisterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        role:
+          type: string
+          enum: [candidate, recruiter]
+      required: [name, email, password, role]
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+
+    RefreshBody:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+      required: [refreshToken]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+      required: [user, accessToken, refreshToken]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [candidate, recruiter]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, email, role, createdAt]
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        headline:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        skills:
+          type: array
+          items:
+            type: string
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExperienceItem"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/EducationItem"
+        resumeUrl:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+        user:
+          $ref: "#/components/schemas/User"
+      required: [id, userId, skills, experience, education, user]
+
+    ExperienceItem:
+      type: object
+      properties:
+        title:
+          type: string
+        company:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+        description:
+          type: string
+          nullable: true
+      required: [title, company, startDate, current]
+
+    EducationItem:
+      type: object
+      properties:
+        degree:
+          type: string
+        institution:
+          type: string
+        field:
+          type: string
+        startYear:
+          type: integer
+        endYear:
+          type: integer
+          nullable: true
+      required: [degree, institution, field, startYear]
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        headline:
+          type: string
+        bio:
+          type: string
+        location:
+          type: string
+        phone:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExperienceItem"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/EducationItem"
+
+    UploadResumeBody:
+      type: object
+      properties:
+        fileName:
+          type: string
+        fileData:
+          type: string
+          description: Base64 encoded PDF
+      required: [fileName, fileData]
+
+    ResumeUploadResponse:
+      type: object
+      properties:
+        resumeUrl:
+          type: string
+      required: [resumeUrl]
+
+    Company:
+      type: object
+      properties:
+        id:
+          type: integer
+        recruiterId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        industry:
+          type: string
+          nullable: true
+        size:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          nullable: true
+      required: [id, recruiterId, name]
+
+    UpdateCompanyBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        website:
+          type: string
+        location:
+          type: string
+        industry:
+          type: string
+        size:
+          type: string
+
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        jobType:
+          type: string
+          enum: [full-time, part-time, contract, internship, remote]
+        salaryMin:
+          type: integer
+          nullable: true
+        salaryMax:
+          type: integer
+          nullable: true
+        skills:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        applicationCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        company:
+          $ref: "#/components/schemas/Company"
+        recruiterId:
+          type: integer
+      required: [id, title, description, location, jobType, skills, isActive, applicationCount, createdAt, company, recruiterId]
+
+    CreateJobBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        jobType:
+          type: string
+          enum: [full-time, part-time, contract, internship, remote]
+        salaryMin:
+          type: integer
+        salaryMax:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: string
+      required: [title, description, location, jobType, skills]
+
+    JobsListResponse:
+      type: object
+      properties:
+        jobs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Job"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required: [jobs, total, page, limit, totalPages]
+
+    Application:
+      type: object
+      properties:
+        id:
+          type: integer
+        candidateId:
+          type: integer
+        jobId:
+          type: integer
+        status:
+          type: string
+          enum: [applied, shortlisted, rejected, hired]
+        coverLetter:
+          type: string
+          nullable: true
+        resumeUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        job:
+          $ref: "#/components/schemas/Job"
+        candidate:
+          $ref: "#/components/schemas/Profile"
+      required: [id, candidateId, jobId, status, createdAt, updatedAt, job, candidate]
+
+    ApplyBody:
+      type: object
+      properties:
+        jobId:
+          type: integer
+        coverLetter:
+          type: string
+        resumeUrl:
+          type: string
+      required: [jobId]
+
+    UpdateStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [applied, shortlisted, rejected, hired]
+      required: [status]
+
+    RecruiterDashboard:
+      type: object
+      properties:
+        totalJobs:
+          type: integer
+        activeJobs:
+          type: integer
+        totalApplications:
+          type: integer
+        applicationsByStatus:
+          type: object
+          properties:
+            applied:
+              type: integer
+            shortlisted:
+              type: integer
+            rejected:
+              type: integer
+            hired:
+              type: integer
+          required: [applied, shortlisted, rejected, hired]
+        recentApplications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Application"
+        topJobs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Job"
+      required: [totalJobs, activeJobs, totalApplications, applicationsByStatus, recentApplications, topJobs]
+
+    CandidateDashboard:
+      type: object
+      properties:
+        totalApplications:
+          type: integer
+        applied:
+          type: integer
+        shortlisted:
+          type: integer
+        rejected:
+          type: integer
+        hired:
+          type: integer
+        recentApplications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Application"
+      required: [totalApplications, applied, shortlisted, rejected, hired, recentApplications]

@@ -1,0 +1,114 @@
+Build a full-stack production-ready MERN Job Portal application named "HireTrack".
+
+Tech Stack:
+
+* Frontend: React (with Vite), Tailwind CSS, Axios, React Router
+* Backend: Node.js, Express.js
+* Database: MongoDB with Mongoose
+* Authentication: JWT with access + refresh tokens
+* File Upload: Cloudinary (for resume upload)
+* Email: Nodemailer (for notifications)
+
+Architecture:
+
+* Follow clean MVC structure (controllers, models, routes, middleware)
+* Use RESTful API design
+* Use environment variables for secrets
+* Proper folder structure for both frontend and backend
+
+User Roles:
+
+1. Candidate
+2. Recruiter
+
+Authentication Features:
+
+* Signup/Login with JWT
+* Password hashing using bcrypt
+* Role-based access control middleware
+* Refresh token system
+* Protected routes
+
+Core Features:
+
+1. Candidate Side:
+
+* Register/Login
+* Update profile (skills, education, experience)
+* Upload resume (PDF) to Cloudinary
+* Browse jobs
+* Search & filter jobs (location, skills, keywords)
+* Apply for jobs
+* View applied jobs
+* Track application status (Applied, Shortlisted, Rejected)
+
+2. Recruiter Side:
+
+* Register/Login
+* Create company profile
+* Post jobs
+* Edit/Delete jobs
+* View applicants for each job
+* Update application status (ATS system)
+* Dashboard with stats (total jobs, applicants)
+
+3. Job System:
+
+* Job schema with title, company, location, skills, description
+* Pagination for job listings
+* Search API with filters
+
+4. Application System:
+
+* Track each application with status
+* Link candidate + job + resume
+
+5. Email Notifications:
+
+* Send email when:
+
+  * User registers
+  * Candidate applies
+  * Status changes
+
+6. UI Requirements:
+
+* Clean modern UI using Tailwind
+* Responsive design
+* Loading spinners
+* Error handling UI
+* Toast notifications
+
+7. Advanced Features:
+
+* Debounced search
+* Pagination (backend + frontend)
+* Secure API (helmet, rate limiting)
+* Input validation using express-validator
+
+8. Deployment Ready:
+
+* Backend ready for Render / Railway
+* Frontend ready for Vercel
+* Use .env.example file
+
+Deliverables:
+
+* Full backend code
+* Full frontend code
+* API documentation
+* Setup instructions (step-by-step)
+* Sample test data
+
+Important:
+
+* Write clean, readable, modular code
+* Add comments explaining key logic
+* Avoid dummy implementations — everything should work end-to-end
+* Use best practices for production apps
+
+Bonus (if possible):
+
+* Add Redux Toolkit or Context API for state management
+* Add dark mode UI
+* Add basic analytics in recruiter dashboard

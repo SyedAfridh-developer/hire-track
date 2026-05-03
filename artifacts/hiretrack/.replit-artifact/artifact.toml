@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "HireTrack"
+version = "1.0.0"
+id = "artifacts/hiretrack"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19664
+
+[services.development]
+run = "pnpm --filter @workspace/hiretrack run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hiretrack", "run", "build" ]
+publicDir = "artifacts/hiretrack/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19664"
+BASE_PATH = "/"
