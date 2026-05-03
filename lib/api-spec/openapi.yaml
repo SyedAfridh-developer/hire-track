@@ -772,6 +772,79 @@ paths:
                     type: integer
                 required: [unreadCount]
 
+  /applications/{applicationId}/interview:
+    get:
+      operationId: getInterview
+      tags: [applications]
+      summary: Get interview details for an application
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Interview details or null
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSchedule"
+        "404":
+          description: No interview scheduled
+    post:
+      operationId: scheduleInterview
+      tags: [applications]
+      summary: Schedule an interview (recruiter)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleInterviewBody"
+      responses:
+        "201":
+          description: Interview scheduled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSchedule"
+    patch:
+      operationId: respondToInterview
+      tags: [applications]
+      summary: Respond to an interview invite (candidate)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterviewResponseBody"
+      responses:
+        "200":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSchedule"
+
   /applications/{applicationId}/notes:
     get:
       operationId: getApplicationNotes
@@ -1420,6 +1493,57 @@ components:
         jobType:
           type: string
           enum: [full-time, part-time, contract, internship, remote]
+
+    InterviewSchedule:
+      type: object
+      properties:
+        id:
+          type: integer
+        applicationId:
+          type: integer
+        recruiterId:
+          type: integer
+        scheduledAt:
+          type: string
+          format: date-time
+        location:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, confirmed, reschedule_requested, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, applicationId, recruiterId, scheduledAt, status, createdAt, updatedAt]
+
+    ScheduleInterviewBody:
+      type: object
+      properties:
+        scheduledAt:
+          type: string
+          format: date-time
+        location:
+          type: string
+        notes:
+          type: string
+      required: [scheduledAt]
+
+    InterviewResponseBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [confirmed, reschedule_requested]
+        message:
+          type: string
+      required: [status]
 
     ApplicantNote:
       type: object

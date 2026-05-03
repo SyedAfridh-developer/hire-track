@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, applicationsTable, jobsTable, companiesTable, profilesTable, usersTable, notificationsTable, applicantNotesTable } from "@workspace/db";
+import { db, applicationsTable, jobsTable, companiesTable, profilesTable, usersTable, notificationsTable, applicantNotesTable, interviewSchedulesTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { authenticate, requireRole, AuthRequest } from "../middlewares/auth";
 
@@ -147,6 +147,96 @@ router.patch("/applications/:applicationId/status", authenticate, requireRole("r
 
   res.json(await buildApplicationResponse(updated));
 });
+
+// ── Interview Scheduling ─────────────────────────────────────────────────────
+
+// GET /api/applications/:applicationId/interview
+router.get("/:applicationId/interview", authenticate, async (req: AuthRequest, res) => {
+  const applicationId = Number(req.params["applicationId"]);
+  const [interview] = await db
+    .select()
+    .from(interviewSchedulesTable)
+    .where(eq(interviewSchedulesTable.applicationId, applicationId))
+    .limit(1);
+  if (!interview) { res.status(404).json({ message: "No interview scheduled" }); return; }
+  res.json(interview);
+});
+
+// POST /api/applications/:applicationId/interview — recruiter schedules
+router.post("/:applicationId/interview", authenticate, requireRole("recruiter"), async (req: AuthRequest, res) => {
+  const applicationId = Number(req.params["applicationId"]);
+  const recruiterId = req.user!.id;
+  const { scheduledAt, location, notes } = req.body as { scheduledAt: string; location?: string; notes?: string };
+
+  if (!scheduledAt) { res.status(400).json({ message: "scheduledAt is required" }); return; }
+
+  const [app] = await db.select().from(applicationsTable).where(eq(applicationsTable.id, applicationId)).limit(1);
+  if (!app) { res.status(404).json({ message: "Application not found" }); return; }
+
+  // Upsert — replace if already exists
+  await db.delete(interviewSchedulesTable).where(eq(interviewSchedulesTable.applicationId, applicationId));
+  const [interview] = await db
+    .insert(interviewSchedulesTable)
+    .values({ applicationId, recruiterId, scheduledAt: new Date(scheduledAt), location, notes })
+    .returning();
+
+  // Notify candidate
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, app.jobId)).limit(1);
+  const dateStr = new Date(scheduledAt).toLocaleString("en-US", {
+    weekday: "short", month: "short", day: "numeric",
+    hour: "numeric", minute: "2-digit", timeZoneName: "short",
+  });
+  await db.insert(notificationsTable).values({
+    userId: app.candidateId,
+    type: "interview_scheduled",
+    title: `Interview scheduled: ${job?.title ?? "your application"}`,
+    message: `Your interview is on ${dateStr}${location ? ` at ${location}` : ""}.${notes ? ` Note: ${notes}` : ""}`,
+    relatedApplicationId: applicationId,
+    relatedJobId: app.jobId,
+  });
+
+  res.status(201).json(interview);
+});
+
+// PATCH /api/applications/:applicationId/interview — candidate responds
+router.patch("/:applicationId/interview", authenticate, requireRole("candidate"), async (req: AuthRequest, res) => {
+  const applicationId = Number(req.params["applicationId"]);
+  const candidateId = req.user!.id;
+  const { status, message: responseMessage } = req.body as { status: "confirmed" | "reschedule_requested"; message?: string };
+
+  const [interview] = await db
+    .select()
+    .from(interviewSchedulesTable)
+    .where(eq(interviewSchedulesTable.applicationId, applicationId))
+    .limit(1);
+  if (!interview) { res.status(404).json({ message: "No interview scheduled" }); return; }
+
+  const [app] = await db.select().from(applicationsTable).where(eq(applicationsTable.id, applicationId)).limit(1);
+  if (!app || app.candidateId !== candidateId) { res.status(403).json({ message: "Forbidden" }); return; }
+
+  const [updated] = await db
+    .update(interviewSchedulesTable)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(interviewSchedulesTable.id, interview.id))
+    .returning();
+
+  // Notify recruiter
+  const [candidateUser] = await db.select().from(usersTable).where(eq(usersTable.id, candidateId)).limit(1);
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, app.jobId)).limit(1);
+  const label = status === "confirmed" ? "confirmed" : "requested a reschedule for";
+  await db.insert(notificationsTable).values({
+    userId: interview.recruiterId,
+    type: "interview_response",
+    title: `${candidateUser?.name ?? "Candidate"} ${label} the interview`,
+    message: `For: ${job?.title ?? "application"}${responseMessage ? `. Message: "${responseMessage}"` : ""}`,
+    relatedApplicationId: applicationId,
+    relatedJobId: app.jobId,
+  });
+
+  res.json(updated);
+});
+
+// ── Notes ────────────────────────────────────────────────────────────────────
 
 // GET /api/applications/:applicationId/notes — recruiter only
 router.get("/:applicationId/notes", authenticate, requireRole("recruiter"), async (req: AuthRequest, res) => {

@@ -30,6 +30,8 @@ import type {
   ErrorResponse,
   GetUnreadMessageCount200,
   HealthStatus,
+  InterviewResponseBody,
+  InterviewSchedule,
   Job,
   JobAlert,
   JobsListResponse,
@@ -47,6 +49,7 @@ import type {
   RefreshBody,
   RegisterBody,
   ResumeUploadResponse,
+  ScheduleInterviewBody,
   SendMessageBody,
   TokenResponse,
   UpdateCompanyBody,
@@ -3089,6 +3092,274 @@ export function useGetUnreadMessageCount<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get interview details for an application
+ */
+export const getGetInterviewUrl = (applicationId: number) => {
+  return `/api/applications/${applicationId}/interview`;
+};
+
+export const getInterview = async (
+  applicationId: number,
+  options?: RequestInit,
+): Promise<InterviewSchedule> => {
+  return customFetch<InterviewSchedule>(getGetInterviewUrl(applicationId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetInterviewQueryKey = (applicationId: number) => {
+  return [`/api/applications/${applicationId}/interview`] as const;
+};
+
+export const getGetInterviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInterview>>,
+  TError = ErrorType<void>,
+>(
+  applicationId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getInterview>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetInterviewQueryKey(applicationId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getInterview>>> = ({
+    signal,
+  }) => getInterview(applicationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!applicationId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getInterview>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetInterviewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getInterview>>
+>;
+export type GetInterviewQueryError = ErrorType<void>;
+
+/**
+ * @summary Get interview details for an application
+ */
+
+export function useGetInterview<
+  TData = Awaited<ReturnType<typeof getInterview>>,
+  TError = ErrorType<void>,
+>(
+  applicationId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getInterview>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetInterviewQueryOptions(applicationId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Schedule an interview (recruiter)
+ */
+export const getScheduleInterviewUrl = (applicationId: number) => {
+  return `/api/applications/${applicationId}/interview`;
+};
+
+export const scheduleInterview = async (
+  applicationId: number,
+  scheduleInterviewBody: ScheduleInterviewBody,
+  options?: RequestInit,
+): Promise<InterviewSchedule> => {
+  return customFetch<InterviewSchedule>(
+    getScheduleInterviewUrl(applicationId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(scheduleInterviewBody),
+    },
+  );
+};
+
+export const getScheduleInterviewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof scheduleInterview>>,
+    TError,
+    { applicationId: number; data: BodyType<ScheduleInterviewBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof scheduleInterview>>,
+  TError,
+  { applicationId: number; data: BodyType<ScheduleInterviewBody> },
+  TContext
+> => {
+  const mutationKey = ["scheduleInterview"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof scheduleInterview>>,
+    { applicationId: number; data: BodyType<ScheduleInterviewBody> }
+  > = (props) => {
+    const { applicationId, data } = props ?? {};
+
+    return scheduleInterview(applicationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ScheduleInterviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof scheduleInterview>>
+>;
+export type ScheduleInterviewMutationBody = BodyType<ScheduleInterviewBody>;
+export type ScheduleInterviewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Schedule an interview (recruiter)
+ */
+export const useScheduleInterview = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof scheduleInterview>>,
+    TError,
+    { applicationId: number; data: BodyType<ScheduleInterviewBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof scheduleInterview>>,
+  TError,
+  { applicationId: number; data: BodyType<ScheduleInterviewBody> },
+  TContext
+> => {
+  return useMutation(getScheduleInterviewMutationOptions(options));
+};
+
+/**
+ * @summary Respond to an interview invite (candidate)
+ */
+export const getRespondToInterviewUrl = (applicationId: number) => {
+  return `/api/applications/${applicationId}/interview`;
+};
+
+export const respondToInterview = async (
+  applicationId: number,
+  interviewResponseBody: InterviewResponseBody,
+  options?: RequestInit,
+): Promise<InterviewSchedule> => {
+  return customFetch<InterviewSchedule>(
+    getRespondToInterviewUrl(applicationId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(interviewResponseBody),
+    },
+  );
+};
+
+export const getRespondToInterviewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof respondToInterview>>,
+    TError,
+    { applicationId: number; data: BodyType<InterviewResponseBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof respondToInterview>>,
+  TError,
+  { applicationId: number; data: BodyType<InterviewResponseBody> },
+  TContext
+> => {
+  const mutationKey = ["respondToInterview"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof respondToInterview>>,
+    { applicationId: number; data: BodyType<InterviewResponseBody> }
+  > = (props) => {
+    const { applicationId, data } = props ?? {};
+
+    return respondToInterview(applicationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RespondToInterviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof respondToInterview>>
+>;
+export type RespondToInterviewMutationBody = BodyType<InterviewResponseBody>;
+export type RespondToInterviewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Respond to an interview invite (candidate)
+ */
+export const useRespondToInterview = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof respondToInterview>>,
+    TError,
+    { applicationId: number; data: BodyType<InterviewResponseBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof respondToInterview>>,
+  TError,
+  { applicationId: number; data: BodyType<InterviewResponseBody> },
+  TContext
+> => {
+  return useMutation(getRespondToInterviewMutationOptions(options));
+};
 
 /**
  * @summary Get recruiter notes for an application

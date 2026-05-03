@@ -1166,6 +1166,72 @@ export const GetUnreadMessageCountResponse = zod.object({
 });
 
 /**
+ * @summary Get interview details for an application
+ */
+export const GetInterviewParams = zod.object({
+  applicationId: zod.coerce.number(),
+});
+
+export const GetInterviewResponse = zod.object({
+  id: zod.number(),
+  applicationId: zod.number(),
+  recruiterId: zod.number(),
+  scheduledAt: zod.coerce.date(),
+  location: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  status: zod.enum([
+    "pending",
+    "confirmed",
+    "reschedule_requested",
+    "cancelled",
+  ]),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Schedule an interview (recruiter)
+ */
+export const ScheduleInterviewParams = zod.object({
+  applicationId: zod.coerce.number(),
+});
+
+export const ScheduleInterviewBody = zod.object({
+  scheduledAt: zod.coerce.date(),
+  location: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Respond to an interview invite (candidate)
+ */
+export const RespondToInterviewParams = zod.object({
+  applicationId: zod.coerce.number(),
+});
+
+export const RespondToInterviewBody = zod.object({
+  status: zod.enum(["confirmed", "reschedule_requested"]),
+  message: zod.string().optional(),
+});
+
+export const RespondToInterviewResponse = zod.object({
+  id: zod.number(),
+  applicationId: zod.number(),
+  recruiterId: zod.number(),
+  scheduledAt: zod.coerce.date(),
+  location: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  status: zod.enum([
+    "pending",
+    "confirmed",
+    "reschedule_requested",
+    "cancelled",
+  ]),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
  * @summary Get recruiter notes for an application
  */
 export const GetApplicationNotesParams = zod.object({

@@ -61,14 +61,35 @@ All routes prefixed with `/api`:
 - `PUT /api/applications/:id/status` — Update status (recruiter)
 - `GET /api/dashboard/recruiter` — Recruiter analytics
 - `GET /api/dashboard/candidate` — Candidate stats
+- `GET /api/applications/:id/interview` — Get interview details
+- `POST /api/applications/:id/interview` — Schedule interview (recruiter; upsert)
+- `PATCH /api/applications/:id/interview` — Respond to interview (candidate: confirm/reschedule_requested)
+- `GET /api/applications/:id/notes` — Get recruiter notes
+- `POST /api/applications/:id/notes` — Add recruiter note
+- `DELETE /api/applications/:id/notes/:noteId` — Delete recruiter note
 
 ## Frontend Pages
 
 **Public**: Landing, Login, Register, Browse Jobs, Job Detail
 
-**Candidate**: Dashboard, Browse Jobs, Job Detail (apply), My Applications, Profile
+**Candidate**: Dashboard, Browse Jobs, Job Detail (apply), My Applications (with interview card + confirm/reschedule), Profile, Resume Builder, Saved Jobs, Alerts
 
-**Recruiter**: Dashboard, My Jobs (CRUD), Post/Edit Job, Applicants ATS, Company Profile
+**Recruiter**: Dashboard (activity feed), My Jobs (CRUD), Post/Edit Job, Applicants ATS (bulk actions, match scoring, private notes, schedule interview), Company Profile, Analytics
+
+## Key Features
+
+- JWT auth with role-based access (candidate / recruiter)
+- Job search with filters (type, salary, location) and pagination
+- ATS pipeline: applied → shortlisted → rejected → hired (bulk status updates)
+- Candidate match scoring vs. job required skills
+- Private recruiter notes per applicant (amber sticky UI, lazy loaded)
+- Interview scheduling: recruiter picks date/time/location, candidate confirms or requests reschedule — both sides notified
+- In-app notifications (bell icon) for status changes, new applications, job alerts, interview events
+- Direct messaging between recruiter and candidate per application
+- Resume builder with PDF preview
+- Saved jobs and job alerts (email-style notifications)
+- Recruiter analytics dashboard (charts: applications over time, status breakdown, top jobs)
+- Recruiter activity feed (live, 30s refresh)
 
 ## Environment Variables
 

@@ -14,10 +14,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft, Users, FileText, Mail, MapPin, MessageCircle,
-  ArrowUpDown, TrendingUp, X, CheckSquare,
+  ArrowUpDown, TrendingUp, X, CheckSquare, CalendarClock,
 } from "lucide-react";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { ApplicantNotes } from "@/components/applicants/ApplicantNotes";
+import { ScheduleInterviewDialog } from "@/components/applicants/ScheduleInterviewDialog";
 
 const STATUS_OPTIONS = [
   { value: "applied",     label: "Applied",     color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
@@ -80,6 +81,7 @@ export default function ApplicantsPage() {
   const queryClient = useQueryClient();
   const updateStatus = useUpdateApplicationStatus();
   const [messagingAppId, setMessagingAppId] = useState<number | null>(null);
+  const [interviewApp, setInterviewApp] = useState<{ id: number; name: string } | null>(null);
   const [sortByScore, setSortByScore] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
@@ -343,6 +345,15 @@ export default function ApplicantsPage() {
                             <MessageCircle className="h-3.5 w-3.5" />
                             Message
                           </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5"
+                            onClick={() => setInterviewApp({ id: app.id, name: user?.name ?? "Candidate" })}
+                          >
+                            <CalendarClock className="h-3.5 w-3.5" />
+                            Interview
+                          </Button>
                         </div>
                       </div>
 
@@ -411,6 +422,16 @@ export default function ApplicantsPage() {
           applicationId={messagingAppId}
           open={messagingAppId !== null}
           onClose={() => setMessagingAppId(null)}
+        />
+      )}
+
+      {interviewApp !== null && (
+        <ScheduleInterviewDialog
+          applicationId={interviewApp.id}
+          candidateName={interviewApp.name}
+          jobTitle={job?.title ?? ""}
+          open={interviewApp !== null}
+          onOpenChange={(v) => { if (!v) setInterviewApp(null); }}
         />
       )}
     </div>
