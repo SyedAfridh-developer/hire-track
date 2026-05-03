@@ -9,3 +9,4 @@ export * from "./savedJobs";
 export * from "./jobAlerts";
 export * from "./applicantNotes";
 export * from "./interviewSchedules";
+export * from "./digestSettings";

@@ -27,6 +27,8 @@ import type {
   CreateAlertBody,
   CreateJobBody,
   CreateNoteBody,
+  DigestSettings,
+  DigestSettingsBody,
   ErrorResponse,
   GetUnreadMessageCount200,
   HealthStatus,
@@ -51,6 +53,7 @@ import type {
   RegisterBody,
   ResumeUploadResponse,
   ScheduleInterviewBody,
+  SendDigestNow200,
   SendMessageBody,
   TokenResponse,
   UpdateCompanyBody,
@@ -3093,6 +3096,248 @@ export function useGetUnreadMessageCount<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get digest email settings for current recruiter
+ */
+export const getGetDigestSettingsUrl = () => {
+  return `/api/recruiter/digest-settings`;
+};
+
+export const getDigestSettings = async (
+  options?: RequestInit,
+): Promise<DigestSettings> => {
+  return customFetch<DigestSettings>(getGetDigestSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDigestSettingsQueryKey = () => {
+  return [`/api/recruiter/digest-settings`] as const;
+};
+
+export const getGetDigestSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDigestSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDigestSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDigestSettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDigestSettings>>
+  > = ({ signal }) => getDigestSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDigestSettings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDigestSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDigestSettings>>
+>;
+export type GetDigestSettingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get digest email settings for current recruiter
+ */
+
+export function useGetDigestSettings<
+  TData = Awaited<ReturnType<typeof getDigestSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDigestSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDigestSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update digest email settings
+ */
+export const getUpdateDigestSettingsUrl = () => {
+  return `/api/recruiter/digest-settings`;
+};
+
+export const updateDigestSettings = async (
+  digestSettingsBody: DigestSettingsBody,
+  options?: RequestInit,
+): Promise<DigestSettings> => {
+  return customFetch<DigestSettings>(getUpdateDigestSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(digestSettingsBody),
+  });
+};
+
+export const getUpdateDigestSettingsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDigestSettings>>,
+    TError,
+    { data: BodyType<DigestSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDigestSettings>>,
+  TError,
+  { data: BodyType<DigestSettingsBody> },
+  TContext
+> => {
+  const mutationKey = ["updateDigestSettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDigestSettings>>,
+    { data: BodyType<DigestSettingsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateDigestSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDigestSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDigestSettings>>
+>;
+export type UpdateDigestSettingsMutationBody = BodyType<DigestSettingsBody>;
+export type UpdateDigestSettingsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update digest email settings
+ */
+export const useUpdateDigestSettings = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDigestSettings>>,
+    TError,
+    { data: BodyType<DigestSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDigestSettings>>,
+  TError,
+  { data: BodyType<DigestSettingsBody> },
+  TContext
+> => {
+  return useMutation(getUpdateDigestSettingsMutationOptions(options));
+};
+
+/**
+ * @summary Send a digest email immediately (test)
+ */
+export const getSendDigestNowUrl = () => {
+  return `/api/recruiter/digest-preview`;
+};
+
+export const sendDigestNow = async (
+  options?: RequestInit,
+): Promise<SendDigestNow200> => {
+  return customFetch<SendDigestNow200>(getSendDigestNowUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSendDigestNowMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendDigestNow>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendDigestNow>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["sendDigestNow"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendDigestNow>>,
+    void
+  > = () => {
+    return sendDigestNow(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendDigestNowMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendDigestNow>>
+>;
+
+export type SendDigestNowMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send a digest email immediately (test)
+ */
+export const useSendDigestNow = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendDigestNow>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendDigestNow>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getSendDigestNowMutationOptions(options));
+};
 
 /**
  * @summary Get all interviews scheduled by this recruiter

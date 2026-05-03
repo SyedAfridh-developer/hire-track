@@ -772,6 +772,62 @@ paths:
                     type: integer
                 required: [unreadCount]
 
+  /recruiter/digest-settings:
+    get:
+      operationId: getDigestSettings
+      tags: [recruiter]
+      summary: Get digest email settings for current recruiter
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Digest settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigestSettings"
+    put:
+      operationId: updateDigestSettings
+      tags: [recruiter]
+      summary: Update digest email settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DigestSettingsBody"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigestSettings"
+
+  /recruiter/digest-preview:
+    post:
+      operationId: sendDigestNow
+      tags: [recruiter]
+      summary: Send a digest email immediately (test)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Digest sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  previewUrl:
+                    type: string
+                    nullable: true
+                required: [message]
+
   /recruiter/interviews:
     get:
       operationId: getRecruiterInterviews
@@ -1510,6 +1566,37 @@ components:
         jobType:
           type: string
           enum: [full-time, part-time, contract, internship, remote]
+
+    DigestSettings:
+      type: object
+      properties:
+        id:
+          type: integer
+        recruiterId:
+          type: integer
+        frequency:
+          type: string
+          enum: [off, daily, weekly]
+        digestEmail:
+          type: string
+        lastSentAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, recruiterId, frequency, digestEmail, updatedAt]
+
+    DigestSettingsBody:
+      type: object
+      properties:
+        frequency:
+          type: string
+          enum: [off, daily, weekly]
+        digestEmail:
+          type: string
+      required: [frequency, digestEmail]
 
     RecruiterInterview:
       type: object

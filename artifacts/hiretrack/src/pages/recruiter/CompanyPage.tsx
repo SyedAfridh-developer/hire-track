@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Building2, Globe, MapPin, Users, Layers } from "lucide-react";
+import { DigestSettings } from "@/components/recruiter/DigestSettings";
 
 const schema = z.object({
   name: z.string().min(2, "Company name required"),
@@ -134,6 +135,7 @@ export default function CompanyPage() {
           </Form>
         </CardContent>
       </Card>
+      <DigestSettings />
     </div>
   );
 }

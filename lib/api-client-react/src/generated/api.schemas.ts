@@ -354,6 +354,38 @@ export interface CreateAlertBody {
   jobType?: CreateAlertBodyJobType;
 }
 
+export type DigestSettingsFrequency =
+  (typeof DigestSettingsFrequency)[keyof typeof DigestSettingsFrequency];
+
+export const DigestSettingsFrequency = {
+  off: "off",
+  daily: "daily",
+  weekly: "weekly",
+} as const;
+
+export interface DigestSettings {
+  id: number;
+  recruiterId: number;
+  frequency: DigestSettingsFrequency;
+  digestEmail: string;
+  lastSentAt?: string | null;
+  updatedAt: string;
+}
+
+export type DigestSettingsBodyFrequency =
+  (typeof DigestSettingsBodyFrequency)[keyof typeof DigestSettingsBodyFrequency];
+
+export const DigestSettingsBodyFrequency = {
+  off: "off",
+  daily: "daily",
+  weekly: "weekly",
+} as const;
+
+export interface DigestSettingsBody {
+  frequency: DigestSettingsBodyFrequency;
+  digestEmail: string;
+}
+
 export type RecruiterInterviewStatus =
   (typeof RecruiterInterviewStatus)[keyof typeof RecruiterInterviewStatus];
 
@@ -488,4 +520,9 @@ export type MarkThreadRead200 = {
 
 export type GetUnreadMessageCount200 = {
   unreadCount: number;
+};
+
+export type SendDigestNow200 = {
+  message: string;
+  previewUrl?: string | null;
 };

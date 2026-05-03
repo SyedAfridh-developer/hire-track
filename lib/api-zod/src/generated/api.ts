@@ -1166,6 +1166,43 @@ export const GetUnreadMessageCountResponse = zod.object({
 });
 
 /**
+ * @summary Get digest email settings for current recruiter
+ */
+export const GetDigestSettingsResponse = zod.object({
+  id: zod.number(),
+  recruiterId: zod.number(),
+  frequency: zod.enum(["off", "daily", "weekly"]),
+  digestEmail: zod.string(),
+  lastSentAt: zod.coerce.date().nullish(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update digest email settings
+ */
+export const UpdateDigestSettingsBody = zod.object({
+  frequency: zod.enum(["off", "daily", "weekly"]),
+  digestEmail: zod.string(),
+});
+
+export const UpdateDigestSettingsResponse = zod.object({
+  id: zod.number(),
+  recruiterId: zod.number(),
+  frequency: zod.enum(["off", "daily", "weekly"]),
+  digestEmail: zod.string(),
+  lastSentAt: zod.coerce.date().nullish(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Send a digest email immediately (test)
+ */
+export const SendDigestNowResponse = zod.object({
+  message: zod.string(),
+  previewUrl: zod.string().nullish(),
+});
+
+/**
  * @summary Get all interviews scheduled by this recruiter
  */
 export const GetRecruiterInterviewsResponseItem = zod.object({
