@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useGetJob, getGetJobQueryKey, useApplyForJob, getGetMyApplicationsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,15 @@ const jobTypeColors: Record<string, string> = {
   "remote": "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
 };
 
+function getReferralCode(): string | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("ref");
+  } catch {
+    return null;
+  }
+}
+
 export default function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const [, setLocation] = useLocation();
@@ -31,6 +40,14 @@ export default function JobDetailPage() {
   const [applyOpen, setApplyOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [applied, setApplied] = useState(false);
+
+  // Track referral click when landing via a ref link
+  useEffect(() => {
+    const code = getReferralCode();
+    if (!code || !jobId) return;
+    sessionStorage.setItem(`referralCode_${jobId}`, code);
+    fetch(`/api/referral/track/${code}`).catch(() => {});
+  }, [jobId]);
 
   const { data: job, isLoading } = useGetJob(Number(jobId), {
     query: { queryKey: getGetJobQueryKey(Number(jobId)), enabled: !!jobId },
@@ -85,6 +102,16 @@ export default function JobDetailPage() {
           setApplied(true);
           queryClient.invalidateQueries({ queryKey: getGetMyApplicationsQueryKey() });
           toast({ title: "Application submitted!", description: "You've applied successfully." });
+          // Track referral conversion
+          const code = sessionStorage.getItem(`referralCode_${job.id}`);
+          if (code) {
+            const token = localStorage.getItem("accessToken");
+            fetch(`/api/referral/convert/${code}`, {
+              method: "POST",
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+            }).catch(() => {});
+            sessionStorage.removeItem(`referralCode_${job.id}`);
+          }
         },
         onError: (err: any) => {
           toast({

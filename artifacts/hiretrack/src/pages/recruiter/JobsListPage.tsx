@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Users, MapPin, Briefcase, TrendingUp, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Users, MapPin, Briefcase, Share2 } from "lucide-react";
+import { useState } from "react";
+import { ReferralLinksDialog } from "@/components/recruiter/ReferralLinksDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +33,7 @@ const jobTypeColors: Record<string, string> = {
 export default function RecruiterJobsListPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [referralJob, setReferralJob] = useState<{ id: number; title: string } | null>(null);
   const queryClient = useQueryClient();
   const deleteJob = useDeleteJob();
 
@@ -99,6 +102,14 @@ export default function RecruiterJobsListPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setReferralJob({ id: job.id, title: job.title })}
+                    >
+                      <Share2 className="h-3.5 w-3.5" />Share
+                    </Button>
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/recruiter/jobs/${job.id}/applicants`} data-testid={`button-applicants-${job.id}`}>
                         <Users className="h-3.5 w-3.5 mr-1" />Applicants
@@ -134,6 +145,15 @@ export default function RecruiterJobsListPage() {
             </Card>
           ))}
         </div>
+      )}
+
+      {referralJob && (
+        <ReferralLinksDialog
+          open={!!referralJob}
+          onOpenChange={(v) => { if (!v) setReferralJob(null); }}
+          jobId={referralJob.id}
+          jobTitle={referralJob.title}
+        />
       )}
     </div>
   );

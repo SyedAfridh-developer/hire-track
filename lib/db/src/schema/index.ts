@@ -10,3 +10,4 @@ export * from "./jobAlerts";
 export * from "./applicantNotes";
 export * from "./interviewSchedules";
 export * from "./digestSettings";
+export * from "./referralLinks";

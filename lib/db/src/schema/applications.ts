@@ -1,4 +1,5 @@
 import { pgTable, serial, integer, text, timestamp, pgEnum, unique } from "drizzle-orm/pg-core";
+import { referralLinksTable } from "./referralLinks";
 import { usersTable } from "./users";
 import { jobsTable } from "./jobs";
 import { createInsertSchema } from "drizzle-zod";
@@ -24,6 +25,7 @@ export const applicationsTable = pgTable(
     status: applicationStatusEnum("status").notNull().default("applied"),
     coverLetter: text("cover_letter"),
     resumeUrl: text("resume_url"),
+    referralLinkId: integer("referral_link_id").references(() => referralLinksTable.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

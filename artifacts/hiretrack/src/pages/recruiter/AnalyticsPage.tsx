@@ -5,7 +5,8 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { Briefcase, Users, TrendingUp, Award } from "lucide-react";
+import { Briefcase, Users, TrendingUp, Award, MousePointerClick, UserCheck, Link2 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const STATUS_COLORS: Record<string, string> = {
   applied:     "#3b82f6",
@@ -62,8 +63,33 @@ function formatDate(iso: string) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+interface LeaderboardEntry {
+  id: number;
+  code: string;
+  label: string;
+  clickCount: number;
+  convertCount: number;
+  jobTitle: string;
+  jobId: number;
+}
+
+function useReferralLeaderboard() {
+  const [data, setData] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    fetch("/api/referral/leaderboard", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then((r) => r.json())
+      .then((d) => setData(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+  return { data, loading };
+}
+
 export default function AnalyticsPage() {
   const { data, isLoading } = useGetRecruiterAnalytics();
+  const { data: leaderboard, loading: lbLoading } = useReferralLeaderboard();
 
   return (
     <div className="space-y-6">
@@ -177,6 +203,66 @@ export default function AnalyticsPage() {
                   />
                 </PieChart>
               </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Referral leaderboard */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-primary" />
+              Referral Link Leaderboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {lbLoading ? (
+              <Skeleton className="h-40 w-full" />
+            ) : leaderboard.length === 0 ? (
+              <div className="h-40 flex flex-col items-center justify-center text-sm text-muted-foreground gap-2">
+                <Link2 className="h-8 w-8 opacity-25" />
+                <span>No referral links yet. Use the Share button on any job to create one.</span>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-muted-foreground border-b">
+                      <th className="pb-2 pr-3 font-medium">#</th>
+                      <th className="pb-2 pr-3 font-medium">Label</th>
+                      <th className="pb-2 pr-3 font-medium">Job</th>
+                      <th className="pb-2 pr-3 font-medium text-right">
+                        <span className="flex items-center justify-end gap-1"><MousePointerClick className="h-3 w-3" />Clicks</span>
+                      </th>
+                      <th className="pb-2 pr-3 font-medium text-right">
+                        <span className="flex items-center justify-end gap-1"><UserCheck className="h-3 w-3" />Applied</span>
+                      </th>
+                      <th className="pb-2 font-medium text-right">Conv.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaderboard.map((entry, i) => {
+                      const rate = entry.clickCount > 0
+                        ? Math.round((entry.convertCount / entry.clickCount) * 100)
+                        : 0;
+                      return (
+                        <tr key={entry.id} className="border-b last:border-0">
+                          <td className="py-2 pr-3 text-muted-foreground font-mono text-xs">{i + 1}</td>
+                          <td className="py-2 pr-3 font-medium text-foreground">{entry.label}</td>
+                          <td className="py-2 pr-3 text-muted-foreground truncate max-w-[140px]">{entry.jobTitle}</td>
+                          <td className="py-2 pr-3 text-right tabular-nums">{entry.clickCount}</td>
+                          <td className="py-2 pr-3 text-right tabular-nums text-green-600 dark:text-green-400 font-medium">{entry.convertCount}</td>
+                          <td className="py-2 text-right">
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${rate >= 20 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : rate > 0 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : "bg-muted text-muted-foreground"}`}>
+                              {rate}%
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>
