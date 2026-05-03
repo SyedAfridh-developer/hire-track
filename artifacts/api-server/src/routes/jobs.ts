@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, jobsTable, companiesTable, applicationsTable } from "@workspace/db";
+import { db, jobsTable, companiesTable, applicationsTable, savedJobsTable } from "@workspace/db";
 import { eq, and, ilike, sql, or, inArray } from "drizzle-orm";
 import { authenticate, requireRole, AuthRequest } from "../middlewares/auth";
 
@@ -23,6 +23,28 @@ async function buildJobResponse(job: typeof jobsTable.$inferSelect) {
     company: company || { id: 0, recruiterId: 0, name: "Unknown", description: null, website: null, location: null, industry: null, size: null, logoUrl: null },
   };
 }
+
+// GET /api/jobs/saved — must be before /:jobId
+router.get("/saved", authenticate, requireRole("candidate"), async (req: AuthRequest, res) => {
+  const rows = await db
+    .select()
+    .from(savedJobsTable)
+    .where(eq(savedJobsTable.userId, req.user!.id));
+
+  const jobIds = rows.map((r) => r.jobId);
+  if (!jobIds.length) {
+    res.json([]);
+    return;
+  }
+
+  const jobs = await db
+    .select()
+    .from(jobsTable)
+    .where(inArray(jobsTable.id, jobIds));
+
+  const result = await Promise.all(jobs.map(buildJobResponse));
+  res.json(result);
+});
 
 // GET /api/jobs/featured
 router.get("/featured", async (_req, res) => {
@@ -137,6 +159,29 @@ router.post("/", authenticate, requireRole("recruiter"), async (req: AuthRequest
     .returning();
 
   res.status(201).json(await buildJobResponse(job));
+});
+
+// POST /api/jobs/:jobId/save
+router.post("/:jobId/save", authenticate, requireRole("candidate"), async (req: AuthRequest, res) => {
+  const jobId = parseInt(req.params.jobId);
+  if (isNaN(jobId)) { res.status(400).json({ message: "Invalid job ID" }); return; }
+
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId)).limit(1);
+  if (!job) { res.status(404).json({ message: "Job not found" }); return; }
+
+  await db.insert(savedJobsTable).values({ userId: req.user!.id, jobId }).onConflictDoNothing();
+  res.json({ message: "Job saved" });
+});
+
+// DELETE /api/jobs/:jobId/save
+router.delete("/:jobId/save", authenticate, requireRole("candidate"), async (req: AuthRequest, res) => {
+  const jobId = parseInt(req.params.jobId);
+  if (isNaN(jobId)) { res.status(400).json({ message: "Invalid job ID" }); return; }
+
+  await db
+    .delete(savedJobsTable)
+    .where(and(eq(savedJobsTable.userId, req.user!.id), eq(savedJobsTable.jobId, jobId)));
+  res.json({ message: "Job unsaved" });
 });
 
 // GET /api/jobs/:jobId

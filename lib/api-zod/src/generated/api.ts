@@ -477,6 +477,64 @@ export const DeleteJobResponse = zod.object({
 });
 
 /**
+ * @summary Get candidate's saved jobs
+ */
+export const GetSavedJobsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string(),
+  location: zod.string(),
+  jobType: zod.enum([
+    "full-time",
+    "part-time",
+    "contract",
+    "internship",
+    "remote",
+  ]),
+  salaryMin: zod.number().nullish(),
+  salaryMax: zod.number().nullish(),
+  skills: zod.array(zod.string()),
+  isActive: zod.boolean(),
+  applicationCount: zod.number(),
+  createdAt: zod.coerce.date(),
+  company: zod.object({
+    id: zod.number(),
+    recruiterId: zod.number(),
+    name: zod.string(),
+    description: zod.string().nullish(),
+    website: zod.string().nullish(),
+    location: zod.string().nullish(),
+    industry: zod.string().nullish(),
+    size: zod.string().nullish(),
+    logoUrl: zod.string().nullish(),
+  }),
+  recruiterId: zod.number(),
+});
+export const GetSavedJobsResponse = zod.array(GetSavedJobsResponseItem);
+
+/**
+ * @summary Save a job (candidate)
+ */
+export const SaveJobParams = zod.object({
+  jobId: zod.coerce.number(),
+});
+
+export const SaveJobResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Remove a saved job (candidate)
+ */
+export const UnsaveJobParams = zod.object({
+  jobId: zod.coerce.number(),
+});
+
+export const UnsaveJobResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
  * @summary Get all applicants for a job (recruiter)
  */
 export const GetJobApplicationsParams = zod.object({

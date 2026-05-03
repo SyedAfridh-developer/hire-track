@@ -5,3 +5,4 @@ export * from "./jobs";
 export * from "./applications";
 export * from "./notifications";
 export * from "./messages";
+export * from "./savedJobs";

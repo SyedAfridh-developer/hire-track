@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, Building2, Clock, Briefcase, DollarSign, ChevronLeft, CheckCircle, Loader2 } from "lucide-react";
+import { MapPin, Building2, Clock, Briefcase, DollarSign, ChevronLeft, CheckCircle, Loader2, Bookmark, BookmarkCheck } from "lucide-react";
+import { useSaveJob, useUnsaveJob, useGetSavedJobs, getGetSavedJobsQueryKey } from "@workspace/api-client-react";
 
 const jobTypeColors: Record<string, string> = {
   "full-time": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
@@ -36,6 +37,35 @@ export default function JobDetailPage() {
   });
 
   const applyMutation = useApplyForJob();
+  const saveJob = useSaveJob();
+  const unsaveJob = useUnsaveJob();
+
+  const { data: savedJobs } = useGetSavedJobs(
+    { query: { queryKey: getGetSavedJobsQueryKey(), enabled: isAuthenticated && role === "candidate" } }
+  );
+  const isSaved = savedJobs?.some((j) => j.id === Number(jobId));
+
+  function handleToggleSave(e: React.MouseEvent) {
+    e.preventDefault();
+    if (!isAuthenticated) { setLocation("/login"); return; }
+    if (isSaved) {
+      unsaveJob.mutate(
+        { jobId: Number(jobId) },
+        {
+          onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetSavedJobsQueryKey() }); toast({ title: "Removed from saved jobs" }); },
+          onError: () => toast({ title: "Failed to unsave", variant: "destructive" }),
+        }
+      );
+    } else {
+      saveJob.mutate(
+        { jobId: Number(jobId) },
+        {
+          onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetSavedJobsQueryKey() }); toast({ title: "Job saved!", description: "Find it in Saved Jobs." }); },
+          onError: () => toast({ title: "Failed to save", variant: "destructive" }),
+        }
+      );
+    }
+  }
 
   function handleApply() {
     if (!isAuthenticated) {
@@ -171,6 +201,18 @@ export default function JobDetailPage() {
                 <>
                   <Button className="w-full" onClick={handleApply} data-testid="button-apply">
                     Apply for this role
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={`w-full gap-2 ${isSaved ? "text-primary border-primary/50" : ""}`}
+                    onClick={handleToggleSave}
+                    disabled={saveJob.isPending || unsaveJob.isPending}
+                    data-testid="button-save-job"
+                  >
+                    {isSaved
+                      ? <><BookmarkCheck className="h-4 w-4" />Saved</>
+                      : <><Bookmark className="h-4 w-4" />Save job</>
+                    }
                   </Button>
                   {!isAuthenticated && (
                     <p className="text-xs text-muted-foreground text-center">

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings } from "lucide-react";
+import { BriefcaseBusiness, LayoutDashboard, User, LogOut, Settings, Bookmark } from "lucide-react";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { MessagesNavBadge } from "./MessagesNavBadge";
 
@@ -40,6 +40,13 @@ export function Navbar() {
                     >
                       <BriefcaseBusiness className="h-4 w-4" />
                       Browse Jobs
+                    </Link>
+                    <Link
+                      href="/saved-jobs"
+                      className={`flex items-center gap-2 text-sm font-medium ${location === "/saved-jobs" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <Bookmark className="h-4 w-4" />
+                      Saved Jobs
                     </Link>
                     <Link
                       href="/applications"
