@@ -1166,6 +1166,31 @@ export const GetUnreadMessageCountResponse = zod.object({
 });
 
 /**
+ * @summary Get all interviews scheduled by this recruiter
+ */
+export const GetRecruiterInterviewsResponseItem = zod.object({
+  id: zod.number(),
+  applicationId: zod.number(),
+  scheduledAt: zod.coerce.date(),
+  location: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  status: zod.enum([
+    "pending",
+    "confirmed",
+    "reschedule_requested",
+    "cancelled",
+  ]),
+  candidateName: zod.string(),
+  candidateId: zod.number(),
+  jobTitle: zod.string(),
+  jobId: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+export const GetRecruiterInterviewsResponse = zod.array(
+  GetRecruiterInterviewsResponseItem,
+);
+
+/**
  * @summary Get interview details for an application
  */
 export const GetInterviewParams = zod.object({

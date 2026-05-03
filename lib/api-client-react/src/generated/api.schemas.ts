@@ -354,6 +354,30 @@ export interface CreateAlertBody {
   jobType?: CreateAlertBodyJobType;
 }
 
+export type RecruiterInterviewStatus =
+  (typeof RecruiterInterviewStatus)[keyof typeof RecruiterInterviewStatus];
+
+export const RecruiterInterviewStatus = {
+  pending: "pending",
+  confirmed: "confirmed",
+  reschedule_requested: "reschedule_requested",
+  cancelled: "cancelled",
+} as const;
+
+export interface RecruiterInterview {
+  id: number;
+  applicationId: number;
+  scheduledAt: string;
+  location?: string | null;
+  notes?: string | null;
+  status: RecruiterInterviewStatus;
+  candidateName: string;
+  candidateId: number;
+  jobTitle: string;
+  jobId: number;
+  createdAt: string;
+}
+
 export type InterviewScheduleStatus =
   (typeof InterviewScheduleStatus)[keyof typeof InterviewScheduleStatus];
 

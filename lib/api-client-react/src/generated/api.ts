@@ -46,6 +46,7 @@ import type {
   Profile,
   RecruiterAnalytics,
   RecruiterDashboard,
+  RecruiterInterview,
   RefreshBody,
   RegisterBody,
   ResumeUploadResponse,
@@ -3085,6 +3086,82 @@ export function useGetUnreadMessageCount<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetUnreadMessageCountQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get all interviews scheduled by this recruiter
+ */
+export const getGetRecruiterInterviewsUrl = () => {
+  return `/api/recruiter/interviews`;
+};
+
+export const getRecruiterInterviews = async (
+  options?: RequestInit,
+): Promise<RecruiterInterview[]> => {
+  return customFetch<RecruiterInterview[]>(getGetRecruiterInterviewsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRecruiterInterviewsQueryKey = () => {
+  return [`/api/recruiter/interviews`] as const;
+};
+
+export const getGetRecruiterInterviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRecruiterInterviews>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getRecruiterInterviews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetRecruiterInterviewsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getRecruiterInterviews>>
+  > = ({ signal }) => getRecruiterInterviews({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRecruiterInterviews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRecruiterInterviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRecruiterInterviews>>
+>;
+export type GetRecruiterInterviewsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all interviews scheduled by this recruiter
+ */
+
+export function useGetRecruiterInterviews<
+  TData = Awaited<ReturnType<typeof getRecruiterInterviews>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getRecruiterInterviews>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRecruiterInterviewsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

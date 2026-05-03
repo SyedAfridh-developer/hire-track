@@ -10,6 +10,7 @@ import notificationsRouter from "./notifications";
 import messagesRouter from "./messages";
 import alertsRouter from "./alerts";
 import analyticsRouter from "./analytics";
+import interviewsRouter from "./interviews";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use("/notifications", notificationsRouter);
 router.use("/messages", messagesRouter);
 router.use("/alerts", alertsRouter);
 router.use("/analytics", analyticsRouter);
+router.use("/recruiter", interviewsRouter);
 
 export default router;

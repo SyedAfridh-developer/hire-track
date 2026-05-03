@@ -21,6 +21,7 @@ import JobFormPage from "@/pages/recruiter/JobFormPage";
 import ApplicantsPage from "@/pages/recruiter/ApplicantsPage";
 import AnalyticsPage from "@/pages/recruiter/AnalyticsPage";
 import CompanyPage from "@/pages/recruiter/CompanyPage";
+import InterviewCalendarPage from "@/pages/recruiter/InterviewCalendarPage";
 import ResumePage from "@/pages/candidate/ResumePage";
 import SavedJobsPage from "@/pages/candidate/SavedJobsPage";
 import AlertsPage from "@/pages/candidate/AlertsPage";
@@ -139,6 +140,11 @@ function Router() {
             <Route path="/recruiter/company">
               <ProtectedRoute allowedRoles={["recruiter"]}>
                 <CompanyPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/recruiter/interviews">
+              <ProtectedRoute allowedRoles={["recruiter"]}>
+                <InterviewCalendarPage />
               </ProtectedRoute>
             </Route>
 
