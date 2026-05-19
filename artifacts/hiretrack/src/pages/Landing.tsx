@@ -89,7 +89,7 @@ export default function Landing() {
               ? Array.from({ length: 4 }).map((_, i) => (
                   <Skeleton key={i} className="h-24 w-full rounded-lg" />
                 ))
-              : (featuredJobs || []).map((job) => (
+              : ((Array.isArray(featuredJobs) ? featuredJobs : [])).map((job) => (
                   <Link key={job.id} href={`/jobs/${job.id}`} data-testid={`job-card-${job.id}`}>
                     <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
                       <CardContent className="p-5">
